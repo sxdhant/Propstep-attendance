@@ -8,6 +8,7 @@ import { ApprovalDialog, type ApprovalMode } from "@/components/attendance/Appro
 import { ApprovalTable } from "@/components/attendance/ApprovalTable";
 import { AttendanceDetailsSheet } from "@/components/attendance/AttendanceDetailsSheet";
 import { BackfillView } from "@/components/admin/BackfillView";
+import { EmployeeCalendar } from "@/components/admin/EmployeeCalendar";
 import { DailyAttendance } from "@/components/admin/DailyAttendance";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { DataTablePagination } from "@/components/shared/DataTablePagination";
@@ -282,10 +283,11 @@ function ApprovalsPanel() {
 }
 
 export function AdminAttendanceView() {
-  const [mode, setMode] = useState<"approvals" | "daily" | "backfill">("approvals");
+  const [mode, setMode] = useState<"approvals" | "daily" | "calendar" | "backfill">("approvals");
   const options = [
     { key: "approvals", label: "Approvals" },
     { key: "daily", label: "Daily view" },
+    { key: "calendar", label: "Employee calendar" },
     { key: "backfill", label: "Add past attendance" },
   ] as const;
   return (
@@ -306,6 +308,8 @@ export function AdminAttendanceView() {
       </div>
       {mode === "approvals" ? (
         <ApprovalsPanel />
+      ) : mode === "calendar" ? (
+        <EmployeeCalendar />
       ) : mode === "backfill" ? (
         <BackfillView />
       ) : (

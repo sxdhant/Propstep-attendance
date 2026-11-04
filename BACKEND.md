@@ -50,7 +50,7 @@ Then, for either: run `npm run db:migrate` and `npm run db:seed` (first admin), 
 
 ## Authentication and security
 
-- **Passwords:** Argon2id (OWASP parameters). Policy: 10 to 128 characters, common-password blocklist, no email name, three character classes or 16+ characters.
+- **Passwords:** Argon2id (OWASP parameters). Policy (deliberately relaxed): 6 to 128 characters, nothing else.
 - **Sessions:** 256-bit random token in an httpOnly, SameSite=Lax cookie; only its SHA-256 is stored. 7-day absolute and 12-hour idle expiry, maximum 5 devices, new token on every sign-in. Password change and reset revoke sessions; users can see and sign out their devices.
 - **Brute force:** 5 failed attempts per email and 20 per IP per 15 minutes, counted for unknown emails too. Same error and same timing for a wrong password and an unknown email.
 - **Two-factor (TOTP):** optional, strongly recommended for admins. Authenticator-app codes plus 8 single-use recovery codes. Secrets are AES-256-GCM encrypted at rest, codes cannot be replayed, and a pending sign-in is a 5-minute challenge that carries no session and locks after 5 wrong codes.

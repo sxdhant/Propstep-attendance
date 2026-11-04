@@ -23,23 +23,11 @@ describe("password hashing", () => {
 });
 
 describe("password policy", () => {
-  it.each([
-    ["short", "Ab1!xyz", "at least 10"],
-    ["common", "password123", "too common"],
-    ["demo password", "Employee@123", "too common"],
-    ["one repeated character", "aaaaaaaaaaaa", "repeat"],
-    ["low variety", "alllowercase", "Mix at least three"],
-  ])("rejects %s", (_name, password, message) => {
-    expect(checkPasswordPolicy(password)).toContain(message);
-  });
-
-  it("rejects a password containing the email name", () => {
-    expect(checkPasswordPolicy("Aarav.sharma-2026!", { email: "aarav.sharma@kestrel.example" })).toContain("email");
-  });
-
-  it("accepts a strong password and a long passphrase", () => {
+  it("only requires 6 to 128 characters", () => {
+    expect(checkPasswordPolicy("abcde")).toContain("at least 6");
+    expect(checkPasswordPolicy("abcdef")).toBeNull();
+    expect(checkPasswordPolicy("ankit@123", { email: "ankit@propstep.in" })).toBeNull();
     expect(checkPasswordPolicy("Sunrise-Harbor-42")).toBeNull();
-    expect(checkPasswordPolicy("correct horse battery staple")).toBeNull();
   });
 
   it("caps the length", () => {

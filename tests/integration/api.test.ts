@@ -193,7 +193,7 @@ describeIf("API (live server)", () => {
     });
 
     it("enforces the password policy and the current-password check", async () => {
-      expect((await emp.req("POST", "/api/auth/change-password", { currentPassword: temp, newPassword: "password123" })).status).toBe(422);
+      expect((await emp.req("POST", "/api/auth/change-password", { currentPassword: temp, newPassword: "abc12" })).status).toBe(422);
       expect((await emp.req("POST", "/api/auth/change-password", { currentPassword: "wrong", newPassword: "Sunrise-Harbor-42" })).status).toBe(403);
       expect((await emp.req("POST", "/api/auth/change-password", { currentPassword: temp, newPassword: "Sunrise-Harbor-42" })).json.ok).toBe(true);
       expect((await emp.req("GET", "/api/auth/me")).json.data.mustChangePassword).toBe(false);

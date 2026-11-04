@@ -28,24 +28,12 @@ export async function verifyAgainstDummy(password: string): Promise<void> {
 
 /* ------------------------------ password policy ----------------------------- */
 
-const COMMON = new Set([
-  "password", "password1", "password123", "passw0rd", "123456789", "1234567890", "12345678910", "qwertyuiop",
-  "qwerty123", "iloveyou12", "welcome123", "letmein123", "admin12345", "administrator", "changeme123",
-  "abc123456", "000000000", "111111111", "123123123", "employee123", "admin@123", "employee@123",
-]);
-
-/** Returns a user-facing problem with the password, or null when it is acceptable. */
-export function checkPasswordPolicy(password: string, context: { email?: string } = {}): string | null {
-  if (password.length < 10) return "Use at least 10 characters.";
+/**
+ * Deliberately relaxed (owner's decision): any password of 6 to 128 characters is accepted.
+ * Login throttling, Argon2id hashing and optional 2FA remain the protection against guessing.
+ */
+export function checkPasswordPolicy(password: string, _context: { email?: string } = {}): string | null {
+  if (password.length < 6) return "Use at least 6 characters.";
   if (password.length > 128) return "Use at most 128 characters.";
-  const lower = password.toLowerCase();
-  if (COMMON.has(lower)) return "That password is too common. Choose something less guessable.";
-  if (/^(.)\1+$/.test(password)) return "Don't repeat a single character.";
-  const local = context.email?.split("@")[0]?.toLowerCase();
-  if (local && local.length >= 4 && lower.includes(local)) return "The password shouldn't contain your email name.";
-  const classes = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter((re) => re.test(password)).length;
-  if (classes < 3 && password.length < 16) {
-    return "Mix at least three of: lowercase, uppercase, numbers, symbols (or use 16+ characters).";
-  }
   return null;
 }

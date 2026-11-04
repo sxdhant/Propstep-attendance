@@ -11,7 +11,7 @@ import { changePassword, resetPassword } from "@/lib/services/session-service";
 
 /** Rules the server enforces, shown up front so people aren't surprised. */
 export const PASSWORD_HINT =
-  "At least 10 characters, not a common password, and a mix of three of: lowercase, uppercase, numbers, symbols (or 16+ characters).";
+  "At least 6 characters.";
 
 function PasswordInput({ id, label, value, onChange, autoComplete, hint, error }: {
   id: string;

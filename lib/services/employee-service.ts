@@ -32,8 +32,3 @@ export async function updateEmployee(id: string, patch: EmployeePatch): Promise<
 export function setEmployeeStatus(id: string, status: AccountStatus): Promise<ServiceResult<Employee>> {
   return updateEmployee(id, { status });
 }
-
-/** Issues a new one-time temporary password and signs the employee out everywhere. */
-export function resetEmployeePassword(id: string): Promise<ServiceResult<{ temporaryPassword: string }>> {
-  return call("POST", `/api/employees/${encodeURIComponent(id)}/reset-password`, undefined, { sync: false });
-}

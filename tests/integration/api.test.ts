@@ -291,20 +291,16 @@ describeIf("API (live server)", () => {
       await db.query("DELETE FROM password_resets");
     });
 
-    it("admin can reset an employee password and force a change", async () => {
-      const reply = await admin.req("POST", `/api/employees/${id}/reset-password`);
-      expect(reply.json.ok).toBe(true);
-      const again = new Client();
-      expect((await again.login(email, reply.json.data.temporaryPassword)).json.data.mustChangePassword).toBe(true);
+    it("gives administrators no way to reset an employee's password", async () => {
+      expect((await admin.req("POST", `/api/employees/${id}/reset-password`)).status).toBe(404);
     });
 
     it("deactivating an employee ends their sessions and blocks sign-in", async () => {
       const live = new Client();
-      const reply = await admin.req("POST", `/api/employees/${id}/reset-password`);
-      await live.login(email, reply.json.data.temporaryPassword);
+      await live.login(email, "Another-Strong-Pass-9");
       expect((await admin.req("PATCH", `/api/employees/${id}`, { status: "inactive" })).json.data.status).toBe("inactive");
       expect((await live.req("GET", "/api/auth/me")).status).toBe(401);
-      expect((await new Client().login(email, reply.json.data.temporaryPassword)).status).toBe(403);
+      expect((await new Client().login(email, "Another-Strong-Pass-9")).status).toBe(403);
       expect((await admin.req("PATCH", `/api/employees/${id}`, { status: "active" })).json.data.status).toBe("active");
     });
 

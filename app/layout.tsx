@@ -1,14 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Public_Sans } from "next/font/google";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { APP_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 // "latin-ext" carries the rupee sign (₹), so amounts render in the same face as the text around them.
-const publicSans = Public_Sans({
+const manrope = Manrope({
   subsets: ["latin", "latin-ext"],
-  variable: "--font-public-sans",
+  variable: "--font-manrope",
   display: "swap",
 });
 
@@ -26,7 +26,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={cn("h-full", publicSans.variable)}>
+    <html lang="en" className={cn("h-full", manrope.variable)}>
       <body className="min-h-full">
         <Providers>{children}</Providers>
       </body>

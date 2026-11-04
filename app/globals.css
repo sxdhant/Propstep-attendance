@@ -6,7 +6,7 @@
 
 @theme inline {
   --font-sans:
-    var(--font-public-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    var(--font-manrope), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
     Arial, sans-serif;
   --font-heading: var(--font-sans);
 
@@ -65,10 +65,10 @@
  * lib/status-config.ts so badges, calendar and charts can never disagree.
  */
 :root {
-  --background: #f6f7f9;
-  --foreground: #1d2939;
+  --background: #f7f8fa;
+  --foreground: #101828;
   --card: #ffffff;
-  --card-foreground: #1d2939;
+  --card-foreground: #101828;
   --popover: #ffffff;
   --popover-foreground: #1d2939;
   --primary: #256abf;
@@ -76,19 +76,19 @@
   --secondary: #f2f4f7;
   --secondary-foreground: #344054;
   --muted: #f2f4f7;
-  --muted-foreground: #5d6779;
+  --muted-foreground: #667085;
   --accent: #eaf2fd;
   --accent-foreground: #1c5cab;
   --destructive: #d03b3b;
-  --border: #e4e7ec;
-  --input: #d0d5dd;
+  --border: #e6e8ec;
+  --input: #dfe2e8;
   --ring: #256abf;
   --chart-1: #2a78d6;
   --chart-2: #17a34a;
   --chart-3: #ee7d2a;
   --chart-4: #d03b3b;
   --chart-5: #7b8794;
-  --radius: 0.625rem;
+  --radius: 0.5rem;
 
   --sidebar: #ffffff;
   --sidebar-foreground: #1d2939;
@@ -96,7 +96,7 @@
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #eaf2fd;
   --sidebar-accent-foreground: #1c5cab;
-  --sidebar-border: #e4e7ec;
+  --sidebar-border: #e6e8ec;
   --sidebar-ring: #256abf;
 
   --ink: #112240;
@@ -115,15 +115,14 @@
   }
 
   body {
-    @apply text-foreground;
+    @apply bg-background text-foreground;
     min-height: 100dvh;
-    background-color: #eef2fb;
-    background-image:
-      radial-gradient(60rem 40rem at 8% -5%, rgba(99, 152, 255, 0.45), transparent 60%),
-      radial-gradient(50rem 38rem at 100% 5%, rgba(168, 120, 255, 0.35), transparent 60%),
-      radial-gradient(55rem 40rem at 85% 105%, rgba(56, 214, 190, 0.35), transparent 60%),
-      radial-gradient(45rem 35rem at 0% 100%, rgba(255, 162, 120, 0.30), transparent 60%);
-    background-attachment: fixed;
+    letter-spacing: -0.005em;
+  }
+
+  h1, h2, h3 {
+    font-weight: 600;
+    letter-spacing: -0.02em;
   }
 
   /* Numbers that sit in columns should line up. */
@@ -148,122 +147,52 @@
 }
 
 /*
- * Glassmorphism: every surface that used an opaque card/popover/sidebar color
- * becomes frosted glass over the gradient backdrop. Done centrally so all
- * pages and shadcn components pick it up without per-file edits.
+ * Minimal surfaces: solid white, a hairline border and the faintest shadow.
+ * Done centrally so every page and shadcn component follows without per-file edits.
  */
 @layer utilities {
   .bg-card,
   .bg-popover,
   .bg-sidebar {
-    background-color: rgba(255, 255, 255, 0.55) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(160%);
-    backdrop-filter: blur(18px) saturate(160%);
+    background-color: #ffffff !important;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: var(--border);
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
   }
   .bg-background\/85 {
-    background-color: rgba(255, 255, 255, 0.45) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-    backdrop-filter: blur(20px) saturate(160%);
-  }
-  .bg-card,
-  .bg-popover,
-  .bg-sidebar,
-  .bg-background\/85 {
-    border-color: rgba(255, 255, 255, 0.6);
-    box-shadow:
-      0 8px 32px rgba(31, 41, 90, 0.10),
-      inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    background-color: rgba(247, 248, 250, 0.9) !important;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
   }
   .bg-popover {
-    background-color: rgba(255, 255, 255, 0.72) !important;
-  }
-  /* Sticky table cells must stay legible while content scrolls beneath them. */
-  .sticky.bg-card {
-    background-color: rgba(255, 255, 255, 0.9) !important;
-  }
-  /* Soft glass for muted fills and inputs. */
-  .bg-muted\/40 {
-    background-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 12px 32px rgba(16, 24, 40, 0.12);
   }
   [data-slot="dialog-overlay"] {
-    background-color: rgba(30, 41, 80, 0.25);
-    -webkit-backdrop-filter: blur(6px);
-    backdrop-filter: blur(6px);
+    background-color: rgba(16, 24, 40, 0.35);
   }
 }
 
-/* ------------------------------- liquid glass ------------------------------- */
+/* ----------------------------------- login ---------------------------------- */
 
 .login-stage {
-  position: relative;
   min-height: 100dvh;
-  overflow: hidden;
+  background: var(--background);
 }
 
-/* Slow, soft colour blobs give the glass something to refract. Nothing else sits on the page. */
-.login-orb {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(60px);
-  opacity: 0.75;
-  will-change: transform;
-}
-.login-orb-a { width: 34rem; height: 34rem; top: -10rem; left: -8rem; background: #6aa0ff; animation: orb-drift 22s ease-in-out infinite alternate; }
-.login-orb-b { width: 30rem; height: 30rem; bottom: -9rem; right: -6rem; background: #b58cff; animation: orb-drift 26s ease-in-out infinite alternate-reverse; }
-.login-orb-c { width: 24rem; height: 24rem; bottom: 8%; left: 18%; background: #5fe0c8; opacity: 0.55; animation: orb-drift 30s ease-in-out infinite alternate; }
-
-@keyframes orb-drift {
-  from { transform: translate3d(0, 0, 0) scale(1); }
-  to { transform: translate3d(4rem, -3rem, 0) scale(1.15); }
+.login-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 16px 40px -12px rgba(16, 24, 40, 0.08);
 }
 
-.liquid-glass {
-  position: relative;
-  isolation: isolate;
-  border-radius: 2rem;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.22) 55%, rgba(255, 255, 255, 0.40));
-  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(1.04);
-  backdrop-filter: blur(28px) saturate(190%) brightness(1.04);
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  box-shadow:
-    0 30px 80px rgba(40, 50, 120, 0.22),
-    0 2px 6px rgba(40, 50, 120, 0.08),
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -1.5px 0 rgba(255, 255, 255, 0.35),
-    inset 0 0 40px rgba(255, 255, 255, 0.25);
+.login-card input:not([type="checkbox"]) {
+  background: #ffffff;
+  border-color: var(--input);
+  box-shadow: none;
 }
-
-/* Specular sheen across the top edge, like light catching curved glass. */
-.liquid-glass::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: radial-gradient(120% 70% at 20% -10%, rgba(255, 255, 255, 0.75), transparent 55%);
-  pointer-events: none;
-}
-
-.liquid-glass input:not([type="checkbox"]) {
-  background: rgba(255, 255, 255, 0.5);
-  border-color: rgba(255, 255, 255, 0.8);
-  border-radius: 0.9rem;
-  box-shadow: inset 0 1px 3px rgba(40, 50, 120, 0.08);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-}
-.liquid-glass input:not([type="checkbox"]):focus-visible {
-  background: rgba(255, 255, 255, 0.75);
-}
-.liquid-glass button[type="submit"] {
-  border-radius: 0.9rem;
-  box-shadow: 0 10px 24px rgba(37, 106, 191, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.45);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .login-orb { animation: none; }
-}
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .liquid-glass { background: rgba(255, 255, 255, 0.92); }
+.login-card input:not([type="checkbox"]):focus-visible {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 106, 191, 0.14);
 }

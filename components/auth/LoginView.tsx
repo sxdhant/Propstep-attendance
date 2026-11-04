@@ -15,7 +15,7 @@ function SignedInNotice() {
   if (!session) return null;
 
   return (
-    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/50 bg-white/40 p-3.5 text-sm">
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-muted/40 p-3.5 text-sm">
       <p className="text-muted-foreground">
         You&apos;re already signed in as <span className="font-medium text-foreground">{session.email ?? session.role}</span>.
       </p>
@@ -41,22 +41,18 @@ function SignedInNotice() {
 export function LoginView() {
   return (
     <div className="login-stage">
-      <span className="login-orb login-orb-a" aria-hidden />
-      <span className="login-orb login-orb-b" aria-hidden />
-      <span className="login-orb login-orb-c" aria-hidden />
-
-      <main id="main" className="relative z-10 grid min-h-dvh place-items-center px-4 py-10">
-        <section className="liquid-glass w-full max-w-[26rem] p-7 sm:p-9" aria-labelledby="login-title">
-          <div className="mb-6 flex justify-center">
-            <Wordmark className="h-10" />
+      <main id="main" className="grid min-h-dvh place-items-center px-4 py-12">
+        <section className="login-card w-full max-w-[25rem] px-7 py-9 sm:px-10 sm:py-11" aria-labelledby="login-title">
+          <div className="mb-9 flex justify-center">
+            <Wordmark className="h-9" />
           </div>
 
           <SignedInNotice />
 
-          <h1 id="login-title" className="text-center text-2xl font-semibold tracking-tight">
-            Sign in to {APP_NAME}
+          <h1 id="login-title" className="text-center text-[1.4rem] leading-tight">
+            Sign in
           </h1>
-          <p className="mt-1.5 mb-7 text-center text-sm text-muted-foreground">Use your work email to open your workspace.</p>
+          <p className="mt-2 mb-8 text-center text-sm text-muted-foreground">Use your work email to open {APP_NAME}.</p>
 
           <LoginForm />
         </section>

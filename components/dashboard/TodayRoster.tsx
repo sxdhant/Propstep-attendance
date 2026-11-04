@@ -198,7 +198,7 @@ export function TodayRosterPanel({ id, kind, roster, onClose, onSelect }: TodayR
                 onClick={() => onSelect(row)}
                 className="flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none"
               >
-                <UserAvatar name={row.employee.fullName} size="md" />
+                <UserAvatar name={row.employee.fullName} photo={row.employee.photoUrl} size="md" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">{row.employee.fullName}</p>
                   <p className="truncate text-xs text-muted-foreground">

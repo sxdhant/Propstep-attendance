@@ -138,7 +138,7 @@ export function AttendanceDetailsSheet({ entry, employee, open, onOpenChange }: 
             <SheetHeader className="border-b p-6 pr-14">
               {employee && (
                 <div className="mb-3 flex items-center gap-3">
-                  <UserAvatar name={employee.fullName} size="md" />
+                  <UserAvatar name={employee.fullName} photo={employee.photoUrl} size="md" />
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-foreground">{employee.fullName}</p>
                     <p className="text-xs text-muted-foreground">

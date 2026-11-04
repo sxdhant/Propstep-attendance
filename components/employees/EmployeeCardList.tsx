@@ -29,7 +29,7 @@ export function EmployeeCardList({ employees, onView, onEdit, onToggleStatus }: 
               onClick={() => onView(employee)}
               className="flex min-w-0 items-center gap-3 rounded-md text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
             >
-              <UserAvatar name={employee.fullName} size="md" />
+              <UserAvatar name={employee.fullName} photo={employee.photoUrl} size="md" />
               <span className="min-w-0">
                 <span className="block truncate text-sm font-medium text-foreground">{employee.fullName}</span>
                 <span className="block truncate text-xs text-muted-foreground">

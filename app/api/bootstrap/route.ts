@@ -1,3 +1,4 @@
+import { avatarUrl } from "@/lib/server/avatars";
 import { monthStart, shiftMonth, monthOf, toDateKey, toIstTimestamp } from "@/lib/date-utils";
 import { DB_VERSION } from "@/lib/constants";
 import { query } from "@/lib/server/db";
@@ -37,7 +38,7 @@ export async function GET() {
   const seededAt = toIstTimestamp(new Date(`${monthStart(anchor.year, anchor.month)}T00:00:00+05:30`));
 
   const scope = isAdmin ? null : user.refId;
-  const [settings, holidayMap, employeeRows, adminRows, attendanceRows, payrollRows, notificationRows] = await Promise.all([
+  const [settings, holidayMap, employeeRows, adminRows, attendanceRows, payrollRows, notificationRows, photoRows] = await Promise.all([
     loadSettings(),
     loadHolidayMap(),
     query(`SELECT ${EMPLOYEE_COLUMNS} FROM employees WHERE ($1::text IS NULL OR id = $1) ORDER BY full_name`, [scope]),
@@ -51,9 +52,18 @@ export async function GET() {
       "SELECT * FROM notifications WHERE recipient = $1 ORDER BY created_at DESC LIMIT 300",
       [isAdmin ? "admin" : user.refId],
     ),
+    query<{ owner_id: string; v: string }>(
+      "SELECT owner_id, (extract(epoch from updated_at) * 1000)::bigint::text AS v FROM avatars WHERE ($1::text IS NULL OR owner_id = $1)",
+      [scope],
+    ),
   ]);
+  const photos = new Map(photoRows.map((r) => [r.owner_id, avatarUrl(r.owner_id, r.v)]));
 
-  const employees = employeeRows.map((row) => toEmployee(row as never));
+  const employees = employeeRows.map((row) => {
+    const e = toEmployee(row as never);
+    const photoUrl = photos.get(e.id);
+    return photoUrl ? { ...e, photoUrl } : e;
+  });
   if (!isAdmin && employees.length === 0) return failure("Your employee record was not found.", 404);
 
   const db: Database = {
@@ -63,7 +73,7 @@ export async function GET() {
     settings,
     // Employees never receive administrator identities; the UI just needs a non-empty list.
     admins: isAdmin
-      ? adminRows.map((a) => ({ id: String(a.id), fullName: String(a.full_name), email: String(a.email), title: String(a.title), phone: String(a.phone ?? "") }))
+      ? adminRows.map((a) => ({ id: String(a.id), fullName: String(a.full_name), email: String(a.email), title: String(a.title), phone: String(a.phone ?? ""), ...(photos.get(String(a.id)) ? { photoUrl: photos.get(String(a.id)) } : {}) }))
       : [{ id: "ADM", fullName: "Administrator", email: "", title: "Administrator" }],
     employees,
     attendance: Object.fromEntries(attendanceRows.map((row) => [row.id, toAttendance(row)])),

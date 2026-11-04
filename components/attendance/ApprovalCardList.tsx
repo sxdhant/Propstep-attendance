@@ -26,7 +26,7 @@ export function ApprovalCardList({ rows, onView, onApprove, onReject }: Approval
           <li key={record.id} className="space-y-3 p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
-                <UserAvatar name={employee.fullName} size="md" />
+                <UserAvatar name={employee.fullName} photo={employee.photoUrl} size="md" />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-foreground">{employee.fullName}</p>
                   <p className="text-xs text-muted-foreground">

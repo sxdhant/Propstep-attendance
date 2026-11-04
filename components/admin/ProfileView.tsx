@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { SecurityDialog } from "@/components/auth/SecurityDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { SettingsSection } from "@/components/settings/SettingsSection";
-import { UserAvatar } from "@/components/shared/UserAvatar";
+import { PhotoUploader } from "@/components/shared/PhotoUploader";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -49,7 +49,7 @@ export function AdminProfileView() {
       <PageHeader title="My profile" description="Your details as the administrator of this workspace." />
 
       <section className="flex max-w-3xl flex-col gap-4 rounded-xl bg-card p-5 shadow-xs ring-1 ring-foreground/10 sm:flex-row sm:items-center">
-        <UserAvatar name={typedName || admin.fullName || admin.email} size="xl" />
+        <PhotoUploader name={typedName || admin.fullName || admin.email} photo={admin.photoUrl} />
         <div className="min-w-0">
           <p className="truncate text-lg font-semibold text-foreground">{admin.fullName}</p>
           <p className="text-sm text-muted-foreground">{admin.title}</p>

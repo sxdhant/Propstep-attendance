@@ -61,7 +61,7 @@ export function ApprovalTable({ rows, onView, onApprove, onReject }: ApprovalTab
             <TableRow key={record.id} className="group/row">
               <TableCell className={CELL}>
                 <div className="flex items-center gap-2.5">
-                  <UserAvatar name={employee.fullName} size="sm" />
+                  <UserAvatar name={employee.fullName} photo={employee.photoUrl} size="sm" />
                   <span className="font-medium">{employee.fullName}</span>
                 </div>
               </TableCell>

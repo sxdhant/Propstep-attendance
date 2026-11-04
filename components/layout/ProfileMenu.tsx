@@ -38,7 +38,7 @@ export function ProfileMenu() {
           className="h-10 gap-2 px-1.5 sm:pr-2"
           aria-label={`${user.name} ${ROLE_LABEL[role]}, open profile menu`}
         >
-          <UserAvatar name={user.name} size="md" />
+          <UserAvatar name={user.name} photo={user.photoUrl} size="md" />
           <span className="hidden min-w-0 text-left sm:block">
             <span className="block max-w-32 truncate text-sm leading-tight font-medium">{user.name}</span>{" "}
             <span className="block text-xs leading-tight text-muted-foreground">{ROLE_LABEL[role]}</span>

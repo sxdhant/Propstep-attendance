@@ -67,7 +67,7 @@ export function RecentActivity({
               <TableRow key={row.record.id} onClick={() => onSelect(row)} className="cursor-pointer">
                 <TableCell className={CELL}>
                   <div className="flex items-center gap-3">
-                    <UserAvatar name={row.employee.fullName} size="sm" />
+                    <UserAvatar name={row.employee.fullName} photo={row.employee.photoUrl} size="sm" />
                     <div className="min-w-0">
                       <RowButton
                         hint={`view attendance on ${formatDate(row.record.date)}`}

@@ -35,7 +35,7 @@ function RecordSummary({ row }: { row: ApprovalRow }) {
   return (
     <div className="rounded-lg border bg-muted/30 p-4">
       <div className="mb-3 flex items-center gap-3 border-b pb-3">
-        <UserAvatar name={employee.fullName} size="md" />
+        <UserAvatar name={employee.fullName} photo={employee.photoUrl} size="md" />
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-foreground">{employee.fullName}</p>
           <p className="text-xs text-muted-foreground">

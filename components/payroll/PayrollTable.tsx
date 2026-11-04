@@ -67,7 +67,7 @@ export function PayrollTable({ rows, onView, onFinalize, onMarkPaid }: PayrollTa
               <TableCell className={cn(CELL, "text-muted-foreground")}>{employee.id}</TableCell>
               <TableCell className={CELL}>
                 <div className="flex items-center gap-2.5">
-                  <UserAvatar name={employee.fullName} size="sm" />
+                  <UserAvatar name={employee.fullName} photo={employee.photoUrl} size="sm" />
                   <div className="min-w-0">
                     <p className="font-medium">{employee.fullName}</p>
                     {employee.status === "inactive" && <p className="text-xs text-muted-foreground">Deactivated</p>}

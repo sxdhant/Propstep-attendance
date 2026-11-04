@@ -71,6 +71,7 @@ describeIf("API (live server)", () => {
     for (const id of created.employeeIds) {
       await db.query("DELETE FROM notifications WHERE recipient = $1", [id]);
       await db.query("DELETE FROM attendance WHERE employee_id = $1", [id]);
+      await db.query("DELETE FROM avatars WHERE owner_id = $1", [id]);
       await db.query("DELETE FROM payroll WHERE employee_id = $1", [id]);
       await db.query("DELETE FROM users WHERE role = 'employee' AND ref_id = $1", [id]);
       await db.query("DELETE FROM employees WHERE id = $1", [id]);
@@ -578,6 +579,62 @@ describeIf("API (live server)", () => {
       const reply = await post([{ employeeId: id, date: days[0], status: "half_day" }]);
       expect(reply.status).toBe(422);
       await db.query("DELETE FROM payroll WHERE id = $1", [`${id}_2026-10`]);
+    });
+  });
+
+  describe("profile photos", () => {
+    const admin = new Client();
+    const emp = new Client();
+    const other = new Client();
+    let id = "";
+    // A minimal JPEG-looking payload: the server checks the file signature, not the claimed type.
+    const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 16, 0x4a, 0x46, 0x49, 0x46, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0xff, 0xd9]);
+    const put = (client: Client, body: BodyInit, type = "image/jpeg") =>
+      fetch(`${BASE}/api/profile/photo`, { method: "PUT", headers: { "content-type": type, origin: BASE, cookie: client.cookie }, body });
+    const get = (client: Client, owner: string) => fetch(`${BASE}/api/avatars/${owner}`, { headers: { cookie: client.cookie } });
+
+    it("lets a person upload, see and remove their own photo", async () => {
+      await admin.login(ADMIN.email, ADMIN.password);
+      const reply = await admin.req("POST", "/api/employees", {
+        fullName: "Photo Tester", email: `ph.${Date.now().toString(36)}@kestrel.example`, phone: "+91 90000 12345",
+        department: "Engineering", designation: "QA", joiningDate: "2026-10-01", monthlyBasicSalary: 30000,
+      });
+      id = reply.json.data.employee.id;
+      created.employeeIds.push(id);
+      const temp = reply.json.data.temporaryPassword;
+      await emp.login(reply.json.data.employee.email, temp);
+      await emp.req("POST", "/api/auth/change-password", { currentPassword: temp, newPassword: "Sunrise-Harbor-42" });
+
+      expect((await put(new Client(), jpeg)).status).toBe(401);
+      const saved = await put(emp, jpeg);
+      expect(saved.status).toBe(200);
+      const { data } = await saved.json();
+      expect(data.photoUrl).toContain(`/api/avatars/${id}?v=`);
+
+      const image = await get(emp, id);
+      expect(image.status).toBe(200);
+      expect(image.headers.get("content-type")).toBe("image/jpeg");
+      expect((await get(admin, id)).status).toBe(200); // administrators may see anyone's
+
+      const boot = (await emp.req("GET", "/api/bootstrap")).json.data.db;
+      expect(boot.employees[0].photoUrl).toContain(`/api/avatars/${id}`);
+
+      expect((await emp.req("DELETE", "/api/profile/photo")).json.ok).toBe(true);
+      expect((await get(emp, id)).status).toBe(404);
+    });
+
+    it("rejects non-images, oversized files and other people's photos", async () => {
+      expect((await put(emp, new TextEncoder().encode("<script>alert(1)</script> not an image"), "image/jpeg")).status).toBe(415);
+      expect((await put(emp, new Uint8Array(0))).status).toBe(422);
+      expect((await put(emp, new Uint8Array(450_000).fill(0xff))).status).toBe(413);
+
+      await put(emp, jpeg);
+      const seeded = new Client();
+      await seeded.login(SEEDED_EMPLOYEE.email, SEEDED_EMPLOYEE.password);
+      expect((await get(seeded, id)).status).toBe(404); // an employee can't read a colleague's photo
+      expect((await put(new Client(null), jpeg)).status).toBe(401);
+      await other.login(ADMIN.email, ADMIN.password);
+      expect((await fetch(`${BASE}/api/profile/photo`, { method: "PUT", headers: { cookie: other.cookie, origin: "https://evil.example" }, body: jpeg })).status).toBe(403);
     });
   });
 

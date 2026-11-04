@@ -82,7 +82,7 @@ export function EmployeeProfileDialog({ employee, open, onOpenChange, onEdit }: 
           <>
             <DialogHeader className="gap-4">
               <div className="flex items-center gap-4">
-                <UserAvatar name={employee.fullName} size="xl" />
+                <UserAvatar name={employee.fullName} photo={employee.photoUrl} size="xl" />
                 <div className="min-w-0 space-y-1.5">
                   <DialogTitle className="text-xl font-semibold">{employee.fullName}</DialogTitle>
                   <DialogDescription>

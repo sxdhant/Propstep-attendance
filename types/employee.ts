@@ -19,6 +19,8 @@ export interface Employee {
   deactivatedOn?: DateKey;
   /** Filled in by the employee after the account is created. Absent until they start. */
   profile?: EmployeeProfile;
+  /** Versioned URL of the profile photo, when one has been uploaded. */
+  photoUrl?: string;
 }
 
 export interface AdminUser {
@@ -27,7 +29,8 @@ export interface AdminUser {
   email: string;
   title: string;
   phone?: string;
+  photoUrl?: string;
 }
 
 /** Fields an admin can submit when creating or editing an employee. */
-export type EmployeeInput = Omit<Employee, "deactivatedOn" | "profile">;
+export type EmployeeInput = Omit<Employee, "deactivatedOn" | "profile" | "photoUrl">;

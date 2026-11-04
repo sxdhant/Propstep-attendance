@@ -116,7 +116,7 @@ export function SalaryBreakdown({ row, open, onOpenChange, showEmployee = false 
             <DialogHeader className="gap-3">
               {showEmployee && (
                 <div className="flex items-center gap-3">
-                  <UserAvatar name={row.employee.fullName} size="md" />
+                  <UserAvatar name={row.employee.fullName} photo={row.employee.photoUrl} size="md" />
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-foreground">{row.employee.fullName}</p>
                     <p className="text-xs text-muted-foreground">

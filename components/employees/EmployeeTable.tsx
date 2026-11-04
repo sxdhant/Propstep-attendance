@@ -48,7 +48,7 @@ export function EmployeeTable({ employees, onView, onEdit, onToggleStatus }: Emp
                 onClick={() => onView(employee)}
                 className="group flex items-center gap-2.5 rounded-md text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
               >
-                <UserAvatar name={employee.fullName} size="sm" />
+                <UserAvatar name={employee.fullName} photo={employee.photoUrl} size="sm" />
                 <span className="font-medium group-hover:text-primary group-hover:underline">{employee.fullName}</span>
               </button>
             </TableCell>

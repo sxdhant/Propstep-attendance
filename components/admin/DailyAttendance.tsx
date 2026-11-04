@@ -93,7 +93,7 @@ export function DailyAttendance() {
                 <TableRow key={employee.id}>
                   <TableCell className="px-3 py-2.5">
                     <div className="flex items-center gap-3">
-                      <UserAvatar name={employee.fullName} size="sm" />
+                      <UserAvatar name={employee.fullName} photo={employee.photoUrl} size="sm" />
                       <div className="min-w-0">
                         <p className="truncate font-medium text-foreground">{employee.fullName}</p>
                         <p className="text-xs text-muted-foreground">{employee.id}</p>

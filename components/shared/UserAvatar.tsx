@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { getInitials } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,8 @@ const SIZES = {
 
 interface UserAvatarProps {
   name: string;
+  /** Profile photo URL. Initials show when there is none or it fails to load. */
+  photo?: string;
   size?: keyof typeof SIZES;
   className?: string;
 }
@@ -36,7 +39,20 @@ interface UserAvatarProps {
  * letters out of the surrounding button's text, so a button's accessible name
  * can match what it visibly says.
  */
-export function UserAvatar({ name, size = "md", className }: UserAvatarProps) {
+export function UserAvatar({ name, photo, size = "md", className }: UserAvatarProps) {
+  const [failed, setFailed] = useState<string | null>(null);
+  if (photo && failed !== photo) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- a small, authenticated, already-resized photo
+      <img
+        src={photo}
+        alt=""
+        aria-hidden
+        onError={() => setFailed(photo)}
+        className={cn("inline-block shrink-0 rounded-full bg-muted object-cover select-none", SIZES[size].split(" ")[0], className)}
+      />
+    );
+  }
   return (
     <span
       aria-hidden

@@ -15,6 +15,7 @@ export interface AppUser {
   name: string;
   email: string;
   subtitle: string;
+  photoUrl?: string;
 }
 
 export interface AppData {
@@ -84,8 +85,8 @@ export function AppDataProvider({ role, children, fallback }: AppDataProviderPro
     const ctx = createAttendanceContext(db, nowMs);
     const user: AppUser =
       role === "admin"
-        ? { name: admin.fullName, email: admin.email, subtitle: admin.title }
-        : { name: employee.fullName, email: employee.email, subtitle: employee.designation };
+        ? { name: admin.fullName, email: admin.email, subtitle: admin.title, photoUrl: admin.photoUrl }
+        : { name: employee.fullName, email: employee.email, subtitle: employee.designation, photoUrl: employee.photoUrl };
 
     return {
       db,

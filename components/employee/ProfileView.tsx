@@ -7,7 +7,7 @@ import { ProfileDetails } from "@/components/profile/ProfileDetails";
 import { ProfileStatusBadge } from "@/components/profile/ProfileStatusBadge";
 import { ProfileWizard } from "@/components/profile/ProfileWizard";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { UserAvatar } from "@/components/shared/UserAvatar";
+import { PhotoUploader } from "@/components/shared/PhotoUploader";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useAppData } from "@/hooks/use-app-data";
@@ -55,7 +55,7 @@ export function EmployeeProfileView() {
       )}
 
       <section className="flex flex-col gap-4 rounded-xl bg-card p-5 shadow-xs ring-1 ring-foreground/10 sm:flex-row sm:items-center">
-        <UserAvatar name={employee.fullName} size="xl" />
+        <PhotoUploader name={employee.fullName} photo={employee.photoUrl} />
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-lg font-semibold text-foreground">{employee.fullName}</h2>

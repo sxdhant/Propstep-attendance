@@ -291,8 +291,17 @@ describeIf("API (live server)", () => {
       await db.query("DELETE FROM password_resets");
     });
 
+    it("lets the admin correct the joining date, and refuses nonsense", async () => {
+      const set = (joiningDate: string) => admin.req("PATCH", `/api/employees/${id}`, { joiningDate });
+      expect((await set("2026-06-15")).json.data.joiningDate).toBe("2026-06-15");
+      expect((await admin.req("GET", `/api/employees/${id}`)).json.data.joiningDate).toBe("2026-06-15");
+      expect((await set("2026-02-31")).status).toBe(422);
+      expect((await set("June")).status).toBe(400);
+    });
+
     it("gives administrators no way to reset an employee's password", async () => {
-      expect((await admin.req("POST", `/api/employees/${id}/reset-password`)).status).toBe(404);
+      const res = await fetch(`${BASE}/api/employees/${id}/reset-password`, { method: "POST", headers: { origin: BASE, cookie: admin.cookie } });
+      expect(res.status).toBe(404);
     });
 
     it("deactivating an employee ends their sessions and blocks sign-in", async () => {

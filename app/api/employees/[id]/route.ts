@@ -12,6 +12,7 @@ const patch = z
     department: z.string().trim().min(1).max(60),
     designation: z.string().trim().min(1).max(60),
     monthlyBasicSalary: z.number().positive().max(10_000_000),
+    joiningDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a valid joining date."),
     status: z.enum(["active", "inactive"]),
   })
   .partial();
@@ -46,11 +47,23 @@ export async function PATCH(request: Request, ctx: RouteContext<"/api/employees/
     }
     const inactive = next.status === "inactive";
 
+    if (parsed.data.joiningDate && parsed.data.joiningDate !== current.joiningDate) {
+      const when = new Date(`${parsed.data.joiningDate}T00:00:00Z`);
+      if (Number.isNaN(when.getTime()) || when.toISOString().slice(0, 10) !== parsed.data.joiningDate) {
+        return failure("Choose a valid joining date.", 422);
+      }
+      // Moving the joining date past a day that already has attendance would orphan that record.
+      const first = await queryOne<{ date: string }>("SELECT min(date)::text AS date FROM attendance WHERE employee_id = $1", [id], tx);
+      if (first?.date && parsed.data.joiningDate > first.date) {
+        return failure(`${current.fullName} already has attendance from ${first.date}, so the joining date can't be later than that.`, 422);
+      }
+    }
+
     await query(
-      `UPDATE employees SET full_name=$1, phone=$2, department=$3, designation=$4, monthly_basic_salary=$5, status=$6, email=$8,
+      `UPDATE employees SET full_name=$1, phone=$2, department=$3, designation=$4, monthly_basic_salary=$5, status=$6, email=$8, joining_date=$9,
          deactivated_on = CASE WHEN $6 = 'inactive' THEN COALESCE(deactivated_on, current_date) ELSE NULL END
        WHERE id=$7`,
-      [next.fullName, next.phone, next.department, next.designation, next.monthlyBasicSalary, next.status, id, next.email],
+      [next.fullName, next.phone, next.department, next.designation, next.monthlyBasicSalary, next.status, id, next.email, next.joiningDate],
       tx,
     );
     await query("UPDATE users SET email = $1 WHERE role='employee' AND ref_id = $2", [next.email, id], tx);

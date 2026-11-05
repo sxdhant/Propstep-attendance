@@ -23,10 +23,8 @@ export async function addEmployee(input: Omit<EmployeeInput, "id"> & { id?: stri
 }
 
 export async function updateEmployee(id: string, patch: EmployeePatch): Promise<ServiceResult<Employee>> {
-  // joiningDate is fixed once the employee exists (payroll and attendance depend on it).
-  const { joiningDate: _ignored, ...allowed } = patch;
-  void _ignored;
-  return call("PATCH", `/api/employees/${encodeURIComponent(id)}`, allowed);
+  // The server refuses a joining date later than the employee's first attendance record.
+  return call("PATCH", `/api/employees/${encodeURIComponent(id)}`, patch);
 }
 
 export function setEmployeeStatus(id: string, status: AccountStatus): Promise<ServiceResult<Employee>> {

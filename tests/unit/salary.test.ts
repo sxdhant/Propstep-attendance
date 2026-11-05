@@ -34,7 +34,7 @@ describe("salary calculation", () => {
 });
 
 describe("attendance rules", () => {
-  const ctx = { policy: DEFAULT_SETTINGS.attendance, holidays: { "2026-11-11": "Test Holiday" } };
+  const ctx = { policy: { ...DEFAULT_SETTINGS.attendance, weeklyOffs: [2] }, holidays: { "2026-11-11": "Test Holiday" } };
 
   it("treats Tuesday as the weekly off and Sunday as a working day", () => {
     expect(getDayKind("2026-11-03", ctx).kind).toBe("weekly_off"); // Tuesday
@@ -46,7 +46,7 @@ describe("attendance rules", () => {
   });
 
   it("derives status from minutes worked", () => {
-    const p = DEFAULT_SETTINGS.attendance;
+    const p = { ...DEFAULT_SETTINGS.attendance, weeklyOffs: [2] };
     expect(deriveStatusFromWorkedMinutes(p.requiredWorkingHours * 60, p)).toBe("present");
     expect(deriveStatusFromWorkedMinutes(p.halfDayThresholdHours * 60, p)).toBe("half_day");
     expect(deriveStatusFromWorkedMinutes(30, p)).toBe("incomplete");
@@ -67,5 +67,15 @@ describe("payroll rules", () => {
     expect(isEmployeeInPayrollMonth(base, 2026, 5)).toBe(false);
     expect(isEmployeeInPayrollMonth(base, 2026, 6)).toBe(true);
     expect(isEmployeeInPayrollMonth({ ...base, deactivatedOn: "2026-07-10" }, 2026, 8)).toBe(false);
+  });
+});
+
+describe("default calendar", () => {
+  it("makes every day a working day until the admin adds a holiday", () => {
+    const ctx = { policy: DEFAULT_SETTINGS.attendance, holidays: { "2026-11-11": "Day off" } };
+    expect(DEFAULT_SETTINGS.attendance.weeklyOffs).toEqual([]);
+    expect(getDayKind("2026-11-10", ctx).kind).toBe("working"); // a Tuesday
+    expect(getDayKind("2026-11-15", ctx).kind).toBe("working"); // a Sunday
+    expect(getDayKind("2026-11-11", ctx).kind).toBe("holiday");
   });
 });

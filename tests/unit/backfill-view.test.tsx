@@ -13,7 +13,7 @@ const employee: Employee = {
 };
 const db: Database = {
   version: DB_VERSION, seededAt: "2026-11-04T10:00:00+05:30", clockOffsetMs: 0,
-  settings: structuredClone(DEFAULT_SETTINGS), // Tuesday is the weekly off
+  settings: { ...structuredClone(DEFAULT_SETTINGS), attendance: { ...DEFAULT_SETTINGS.attendance, weeklyOffs: [2] } }, // Tuesday is the weekly off
   admins: [{ id: "ADM-001", fullName: "Admin", email: "a@x.example", title: "Administrator" }],
   employees: [employee], attendance: {}, payroll: {}, notifications: [], holidays: [],
 };

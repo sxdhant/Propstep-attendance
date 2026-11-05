@@ -14,7 +14,7 @@ const person = (id: string, name: string, over: Partial<Employee> = {}): Employe
 
 const make = (attendance: Database["attendance"], employees: Employee[]): Database => ({
   version: DB_VERSION, seededAt: "2026-11-04T10:00:00+05:30", clockOffsetMs: 0,
-  settings: structuredClone(DEFAULT_SETTINGS),
+  settings: { ...structuredClone(DEFAULT_SETTINGS), attendance: { ...DEFAULT_SETTINGS.attendance, weeklyOffs: [2] } },
   admins: [{ id: "ADM-001", fullName: "Admin", email: "a@x.example", title: "Admin" }],
   employees, attendance, payroll: {}, notifications: [], holidays: [],
 });

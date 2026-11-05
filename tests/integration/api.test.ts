@@ -172,16 +172,18 @@ describeIf("API (live server)", () => {
       email = `it.${stamp}@kestrel.example`;
       const today = new Date().toISOString().slice(0, 10);
       const reply = await admin.req("POST", "/api/employees", {
-        fullName: "Integration Tester", email, phone: "+91 90000 12345", department: "Engineering",
+        id: `IT-${stamp}`, fullName: "Integration Tester", email, phone: "+91 90000 12345", department: "Engineering",
         designation: "QA", joiningDate: today, monthlyBasicSalary: 30000,
       });
       expect(reply.status).toBe(201);
       id = reply.json.data.employee.id;
       temp = reply.json.data.temporaryPassword;
       created.employeeIds.push(id);
-      expect(id).toMatch(/^EMP-\d+$/);
+      expect(id).toBe(`IT-${stamp}`);
       expect(temp.length).toBeGreaterThanOrEqual(16);
-      expect((await admin.req("POST", "/api/employees", { fullName: "Dup", email, phone: "+91 90000 12345", department: "Sales", designation: "x", joiningDate: today, monthlyBasicSalary: 1000 })).status).toBe(409);
+      expect((await admin.req("POST", "/api/employees", { id: `IT-${stamp}`, fullName: "Dup", email: `other.${stamp}@kestrel.example`, phone: "+91 90000 12345", department: "Sales", designation: "x", joiningDate: today, monthlyBasicSalary: 1000 })).status).toBe(409);
+      expect((await admin.req("POST", "/api/employees", { id: `IT2-${stamp}`, fullName: "Dup", email, phone: "+91 90000 12345", department: "Sales", designation: "x", joiningDate: today, monthlyBasicSalary: 1000 })).status).toBe(409);
+      expect((await admin.req("POST", "/api/employees", { fullName: "No Id", email: `noid.${stamp}@kestrel.example`, phone: "+91 90000 12345", department: "Sales", designation: "x", joiningDate: today, monthlyBasicSalary: 1000 })).status).toBe(400);
     });
 
     it("blocks the API until the temporary password is changed", async () => {
@@ -462,7 +464,7 @@ describeIf("API (live server)", () => {
     it("is for administrators only", async () => {
       await admin.login(ADMIN.email, ADMIN.password);
       const reply = await admin.req("POST", "/api/employees", {
-        fullName: "Backfill Tester", email: `bf.${Date.now().toString(36)}@kestrel.example`, phone: "+91 90000 12345",
+        id: `BF-${Date.now().toString(36)}`, fullName: "Backfill Tester", email: `bf.${Date.now().toString(36)}@kestrel.example`, phone: "+91 90000 12345",
         department: "Engineering", designation: "QA", joiningDate: "2026-10-01", monthlyBasicSalary: 30000,
       });
       id = reply.json.data.employee.id;
@@ -601,7 +603,7 @@ describeIf("API (live server)", () => {
     it("lets a person upload, see and remove their own photo", async () => {
       await admin.login(ADMIN.email, ADMIN.password);
       const reply = await admin.req("POST", "/api/employees", {
-        fullName: "Photo Tester", email: `ph.${Date.now().toString(36)}@kestrel.example`, phone: "+91 90000 12345",
+        id: `PH-${Date.now().toString(36)}`, fullName: "Photo Tester", email: `ph.${Date.now().toString(36)}@kestrel.example`, phone: "+91 90000 12345",
         department: "Engineering", designation: "QA", joiningDate: "2026-10-01", monthlyBasicSalary: 30000,
       });
       id = reply.json.data.employee.id;

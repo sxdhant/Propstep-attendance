@@ -123,11 +123,23 @@ function EmployeeFormBody({ employee, onDone }: { employee: Employee | null; onD
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel htmlFor="emp-id">Employee ID</FieldLabel>
-                  <Input {...field} value={editing ? field.value : ""} id="emp-id" autoComplete="off" readOnly disabled={!editing} placeholder="Assigned automatically" aria-invalid={fieldState.invalid} className="bg-muted/50" />
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    id="emp-id"
+                    autoComplete="off"
+                    readOnly={editing}
+                    disabled={editing}
+                    placeholder="For example, EMP-1001"
+                    aria-invalid={fieldState.invalid}
+                    className={editing ? "bg-muted/50" : undefined}
+                  />
                   {fieldState.invalid ? (
                     <FieldError errors={[fieldState.error]} />
                   ) : (
-                    editing && <FieldDescription>The ID can&apos;t change once created.</FieldDescription>
+                    <FieldDescription>
+                      {editing ? "The ID can't change once created." : "Choose a unique ID. It can't be changed later."}
+                    </FieldDescription>
                   )}
                 </Field>
               )}

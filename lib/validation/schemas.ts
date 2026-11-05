@@ -34,7 +34,7 @@ export function createEmployeeSchema(existing: Employee[], editingId?: string) {
         .trim()
         .min(2, "Enter the employee's full name.")
         .max(80, "Keep the name under 80 characters."),
-      /** Assigned by the server when the employee is created. */
+      /** Typed by the admin when creating; fixed afterwards. */
       id: z.string().optional(),
       email: requiredEmail("Enter an email address."),
       phone: z
@@ -56,6 +56,18 @@ export function createEmployeeSchema(existing: Employee[], editingId?: string) {
       status: z.enum(["active", "inactive"]),
     })
     .superRefine((values, ctx) => {
+      if (!editingId) {
+        const id = (values.id ?? "").trim();
+        if (id.length < 2) {
+          ctx.addIssue({ code: "custom", path: ["id"], message: "Enter an employee ID, like EMP-1001." });
+        } else if (!/^[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(id)) {
+          ctx.addIssue({ code: "custom", path: ["id"], message: "Use letters, numbers, hyphens, dots, underscores or slashes." });
+        } else if (id.length > 30) {
+          ctx.addIssue({ code: "custom", path: ["id"], message: "Keep the ID under 30 characters." });
+        } else if (existing.some((e) => e.id.toLowerCase() === id.toLowerCase())) {
+          ctx.addIssue({ code: "custom", path: ["id"], message: "This employee ID is already in use." });
+        }
+      }
       const emailTaken = existing.some(
         (e) => e.id !== editingId && e.email.toLowerCase() === values.email.toLowerCase(),
       );

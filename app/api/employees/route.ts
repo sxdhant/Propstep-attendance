@@ -7,6 +7,12 @@ import { hashPassword } from "@/lib/server/passwords";
 import { EMPLOYEE_COLUMNS, toEmployee } from "@/lib/server/repo";
 
 const employeeBody = z.object({
+  id: z
+    .string()
+    .trim()
+    .min(2, "Enter an employee ID.")
+    .max(30, "Keep the employee ID under 30 characters.")
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._/-]*$/, "Use letters, numbers, hyphens, dots, underscores or slashes in the ID."),
   fullName: z.string().trim().min(2).max(80),
   email: z.string().trim().toLowerCase().email().max(254),
   phone: z.string().trim().min(7).max(20),
@@ -44,8 +50,10 @@ export async function POST(request: Request) {
     if (await queryOne("SELECT 1 FROM users WHERE lower(email) = $1", [input.email], tx)) {
       return failure("An account with that email already exists.", 409);
     }
-    const seq = await queryOne<{ n: string }>("SELECT nextval('employee_number_seq') AS n", [], tx);
-    const id = `EMP-${seq?.n}`;
+    const id = input.id;
+    if (await queryOne("SELECT 1 FROM employees WHERE lower(id) = lower($1)", [id], tx)) {
+      return failure(`Employee ID ${id} is already in use.`, 409);
+    }
     const row = await queryOne(
       `INSERT INTO employees (id, full_name, email, phone, department, designation, joining_date, monthly_basic_salary, status)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'active') RETURNING ${EMPLOYEE_COLUMNS}`,

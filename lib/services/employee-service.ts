@@ -12,6 +12,7 @@ export interface CreatedEmployee {
 
 export async function addEmployee(input: Omit<EmployeeInput, "id"> & { id?: string }): Promise<ServiceResult<CreatedEmployee>> {
   return call("POST", "/api/employees", {
+    id: input.id?.trim(),
     fullName: input.fullName,
     email: input.email,
     phone: input.phone,

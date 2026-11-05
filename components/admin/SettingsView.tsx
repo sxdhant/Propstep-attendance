@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { AttendancePolicyForm } from "@/components/settings/AttendancePolicyForm";
 import { CompanySettingsForm } from "@/components/settings/CompanySettingsForm";
+import { HolidaysForm } from "@/components/settings/HolidaysForm";
 import { SalaryPolicyForm } from "@/components/settings/SalaryPolicyForm";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-type SettingsTab = "company" | "attendance" | "salary";
+type SettingsTab = "company" | "attendance" | "salary" | "holidays";
 
 export function AdminSettingsView() {
   const [tab, setTab] = useState<SettingsTab>("company");
@@ -30,6 +31,9 @@ export function AdminSettingsView() {
           <TabsTrigger value="salary" className="px-4">
             Salary Policy
           </TabsTrigger>
+          <TabsTrigger value="holidays" className="px-4">
+            Holidays
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="company">
           <CompanySettingsForm />
@@ -39,6 +43,9 @@ export function AdminSettingsView() {
         </TabsContent>
         <TabsContent value="salary">
           <SalaryPolicyForm />
+        </TabsContent>
+        <TabsContent value="holidays">
+          <HolidaysForm />
         </TabsContent>
       </Tabs>
     </div>

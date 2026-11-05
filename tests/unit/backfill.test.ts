@@ -15,7 +15,7 @@ const employee: Employee = {
   designation: "Dev", joiningDate: "2026-10-05", monthlyBasicSalary: 30000, status: "active",
 };
 const base: PlanContext = {
-  policy: DEFAULT_SETTINGS.attendance, // 10:00 to 18:30, 8 required hours, 4 hour half-day threshold, Tuesday off
+  policy: { ...DEFAULT_SETTINGS.attendance, weeklyOffs: [2] }, // 10:00 to 18:30, 8 required hours, 4 hour half-day threshold, Tuesday off
   holidays: { "2026-10-20": "Diwali" },
   employee, today: "2026-11-04", existing: null, locked: false, allowedMonths: ["2026-10"],
 };

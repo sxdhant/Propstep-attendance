@@ -82,7 +82,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     requiredWorkingHours: 8,
     lateGraceMinutes: 15,
     halfDayThresholdHours: 4,
-    weeklyOffs: [2],
+    // Every day is a working day; the admin marks days off as holidays.
+    weeklyOffs: [],
   },
   salary: {
     divisorPolicy: "scheduled_working_days",

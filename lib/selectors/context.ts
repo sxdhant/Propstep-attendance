@@ -1,10 +1,13 @@
 import { buildHolidayMap, type AttendanceContext } from "@/lib/attendance-utils";
-import { monthOf, shiftMonth, toDateKey } from "@/lib/date-utils";
+import { compareMonths, monthOf, shiftMonth, toDateKey } from "@/lib/date-utils";
 import type { MonthRef } from "@/types/common";
 import type { Database } from "@/types/database";
 
 /** Months of attendance history the seed generates before the month it was created in. */
 export const SEEDED_HISTORY_MONTHS = 3;
+
+/** First month an administrator can enter past attendance for. */
+const HISTORY_START: MonthRef = { year: 2026, month: 5 };
 
 /**
  * The earliest month that has meaningful attendance data. Months before it
@@ -12,7 +15,9 @@ export const SEEDED_HISTORY_MONTHS = 3;
  * stop here.
  */
 export function getDataWindowStart(db: Database): MonthRef {
-  return shiftMonth(monthOf(db.seededAt.slice(0, 10)), -SEEDED_HISTORY_MONTHS);
+  const seeded = shiftMonth(monthOf(db.seededAt.slice(0, 10)), -SEEDED_HISTORY_MONTHS);
+  // Past attendance can be entered from May 2026, so month pickers must reach back that far.
+  return compareMonths(seeded, HISTORY_START) > 0 ? HISTORY_START : seeded;
 }
 
 /** Current demo time: the real clock plus the fast-forward offset. Call from handlers, not render. */

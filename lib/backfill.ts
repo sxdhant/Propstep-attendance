@@ -11,7 +11,9 @@ import type { AttendancePolicy } from "@/types/settings";
  */
 
 /** Months an administrator may backfill. Edit this list to open (or close) a month. */
-export const BACKFILL_ALLOWED_MONTHS: readonly string[] = ["2026-10"];
+export const BACKFILL_ALLOWED_MONTHS: readonly string[] = [
+  "2026-05", "2026-06", "2026-07", "2026-08", "2026-09", "2026-10", "2026-11", "2026-12",
+];
 
 /** Stored in `remarks` so backfilled days are recognisable, and so they are the only days a backfill may change. */
 export const BACKFILL_REMARK = "Entered by admin";
@@ -58,7 +60,7 @@ export function planBackfillEntry(entry: BackfillEntry, ctx: PlanContext): Plan 
   if (!employee) return { ok: false, error: `Unknown employee ${entry.employeeId}.` };
   if (!DATE.test(entry.date)) return { ok: false, error: `${entry.date} is not a valid date (use YYYY-MM-DD).` };
   if (!ctx.allowedMonths.includes(entry.date.slice(0, 7))) {
-    return { ok: false, error: `Only ${ctx.allowedMonths.join(", ")} can be backfilled.` };
+    return { ok: false, error: `Only ${ctx.allowedMonths.length > 1 ? `${ctx.allowedMonths[0]} to ${ctx.allowedMonths[ctx.allowedMonths.length - 1]}` : ctx.allowedMonths.join(", ")} can be backfilled.` };
   }
   if (entry.date > ctx.today) return { ok: false, error: "That date is in the future." };
   if (entry.date < employee.joiningDate) return { ok: false, error: `${employee.fullName} joined on ${employee.joiningDate}.` };

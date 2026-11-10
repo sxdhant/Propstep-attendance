@@ -32,7 +32,10 @@ vi.mock("@/lib/services/attendance-service", () => ({
 
 async function renderView() {
   const { BackfillView } = await import("@/components/admin/BackfillView");
-  return render(<BackfillView />);
+  const view = render(<BackfillView />);
+  // The first open month is May; these tests use the employee who joined in October.
+  await userEvent.selectOptions(screen.getByLabelText("Month"), "2026-10");
+  return view;
 }
 
 beforeEach(() => {

@@ -177,6 +177,12 @@ export const ATTENDANCE_STATUS_META: Record<AttendanceStatus, StatusMeta> = {
     icon: CalendarOff,
     description: "A day off taken by this employee.",
   },
+  comp_off: {
+    label: "Comp-off",
+    tone: "cyan",
+    icon: CalendarOff,
+    description: "A paid day off, taken against a holiday worked.",
+  },
   not_checked_in: {
     label: "Not Checked In",
     tone: "gray",
@@ -222,6 +228,7 @@ export const DAY_DISPLAY_META: Record<DayDisplayStatus, StatusMeta> = {
   in_progress: { ...ATTENDANCE_STATUS_META.in_progress },
   holiday: { ...ATTENDANCE_STATUS_META.holiday },
   weekly_off: { ...ATTENDANCE_STATUS_META.weekly_off },
+  comp_off: { ...ATTENDANCE_STATUS_META.comp_off },
   not_checked_in: { ...ATTENDANCE_STATUS_META.not_checked_in },
   upcoming: {
     label: "Upcoming",

@@ -569,6 +569,31 @@ describeIf("API (live server)", () => {
       expect((await stored()).some((r: any) => r.date === off)).toBe(false);
     });
 
+    it("earns comp-off by working a holiday and only lets it be taken once earned", async () => {
+      const holiday = "2026-10-31";
+      const credit = "2026-10-30";
+      const extra = "2026-10-29";
+      expect((await admin.req("POST", "/api/holidays", { date: holiday, name: "Test Holiday" })).status).toBe(201);
+      try {
+        const early = await post([{ employeeId: id, date: credit, status: "comp_off" }]);
+        expect(early.status).toBe(422); // nothing earned yet
+        expect(JSON.stringify(early.json)).toContain("comp-off");
+
+        expect((await post([{ employeeId: id, date: holiday, status: "week_off" }])).status).toBe(422); // can't be a day off on a holiday
+        expect((await post([{ employeeId: id, date: holiday, status: "present" }])).json.ok).toBe(true); // working a holiday is allowed
+
+        expect((await post([{ employeeId: id, date: credit, status: "comp_off" }])).json.ok).toBe(true);
+        const row = (await stored()).find((r: any) => r.date === credit) as any;
+        expect(row).toMatchObject({ status: "comp_off", approval: "not_required", check_in: null });
+
+        expect((await post([{ employeeId: id, date: extra, status: "comp_off" }])).status).toBe(422); // only one earned
+      } finally {
+        await post([{ employeeId: id, date: credit, status: "absent" }, { employeeId: id, date: holiday, status: "absent" }]);
+        await admin.req("DELETE", "/api/holidays", { date: holiday });
+      }
+      expect((await stored()).some((r: any) => r.date === credit || r.date === holiday)).toBe(false);
+    });
+
     it("shows up for the employee, counts as approved days in payroll, and is audited", async () => {
       const mine = (await emp.req("GET", "/api/bootstrap")).json.data.db;
       const records = Object.values<any>(mine.attendance).filter((a) => a.date.startsWith("2026-10"));

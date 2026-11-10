@@ -56,7 +56,9 @@ function Timeline({ events }: { events: TimelineEvent[] }) {
 
 function NoRecordNote({ entry }: { entry: DayEntry }) {
   const note =
-    entry.display === "holiday"
+    entry.display === "comp_off"
+      ? { icon: CalendarOff, text: "Comp-off. A paid day off taken against a holiday worked. No salary is deducted." }
+      : entry.display === "holiday"
       ? { icon: PartyPopper, text: `${entry.holidayName ?? "Company holiday"}. No attendance is expected.` }
       : entry.display === "weekly_off"
         ? { icon: CalendarOff, text: "Scheduled weekly off. No attendance is expected." }

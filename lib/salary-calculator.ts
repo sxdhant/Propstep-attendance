@@ -23,6 +23,8 @@ export interface SalaryInput {
   monthlyBasicSalary: number;
   approvedFullDays: number;
   approvedHalfDays: number;
+  /** Paid comp-off days taken. Counts as a full payable day each. */
+  compOffDays?: number;
   scheduledWorkingDays: number;
   calendarDays: number;
 }
@@ -41,8 +43,8 @@ export function getSalaryDivisor(
   return Math.max(1, divisor);
 }
 
-export function calculatePayableUnits(fullDays: number, halfDays: number, halfDayUnits: number): number {
-  return Math.round((fullDays + halfDays * halfDayUnits) * 100) / 100;
+export function calculatePayableUnits(fullDays: number, halfDays: number, halfDayUnits: number, compOffDays = 0): number {
+  return Math.round((fullDays + compOffDays + halfDays * halfDayUnits) * 100) / 100;
 }
 
 export function calculateSalary(input: SalaryInput, policy: SalaryPolicy): SalaryCalculation {
@@ -51,6 +53,7 @@ export function calculateSalary(input: SalaryInput, policy: SalaryPolicy): Salar
     input.approvedFullDays,
     input.approvedHalfDays,
     policy.halfDayUnits,
+    input.compOffDays ?? 0,
   );
   const raw = (input.monthlyBasicSalary * payableUnits) / divisor;
   const cappedAtBasic = raw > input.monthlyBasicSalary;
@@ -63,6 +66,7 @@ export function calculateSalary(input: SalaryInput, policy: SalaryPolicy): Salar
     divisor,
     approvedFullDays: input.approvedFullDays,
     approvedHalfDays: input.approvedHalfDays,
+    compOffDays: input.compOffDays ?? 0,
     halfDayUnits: policy.halfDayUnits,
     payableUnits,
     perDayRate: input.monthlyBasicSalary / divisor,
@@ -82,6 +86,7 @@ export function buildPayrollSnapshot(
       monthlyBasicSalary,
       approvedFullDays: summary.approvedFullDays,
       approvedHalfDays: summary.approvedHalfDays,
+      compOffDays: summary.compOffDays,
       scheduledWorkingDays: summary.scheduledWorkingDays,
       calendarDays: summary.calendarDays,
     },

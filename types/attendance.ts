@@ -8,7 +8,9 @@ export type RecordStatus =
   | "incomplete"
   | "in_progress"
   /** An employee's own day off, chosen by the admin. Not an absence and not counted as a working day. */
-  | "week_off";
+  | "week_off"
+  /** A paid day off taken against comp-off earned by working on a holiday. */
+  | "comp_off";
 
 /**
  * What a calendar day resolves to for display. Adds the calendar-driven states
@@ -56,6 +58,7 @@ export type DayDisplayStatus =
   | "in_progress"
   | "holiday"
   | "weekly_off"
+  | "comp_off"
   | "not_checked_in"
   | "upcoming"
   | "inactive";

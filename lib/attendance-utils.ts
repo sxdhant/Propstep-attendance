@@ -171,6 +171,8 @@ export interface DayEntry {
   /** Collapsed status that drives calendar colors. */
   display: DayDisplayStatus;
   isHalfDay: boolean;
+  /** A comp-off day taken by the employee: paid, and neither a holiday, a leave nor an absence. */
+  compOff: boolean;
 }
 
 export function buildDayEntry(
@@ -185,7 +187,8 @@ export function buildDayEntry(
   const isToday = date === ctx.today;
   const isFuture = date > ctx.today;
   const isEmployed = isEmployedOn(employee, date);
-  const resolved = record && !personalOff ? resolveRecord(record, ctx) : null;
+  const compOff = record?.status === "comp_off";
+  const resolved = record && !personalOff && !compOff ? resolveRecord(record, ctx) : null;
 
   let attendanceStatus: AttendanceStatus;
   let approvalStatus: ApprovalStatus = "not_required";
@@ -203,6 +206,9 @@ export function buildDayEntry(
   } else if (!isEmployed) {
     attendanceStatus = "not_checked_in";
     display = "inactive";
+  } else if (compOff) {
+    attendanceStatus = "comp_off";
+    display = "comp_off";
   } else if (kind === "holiday") {
     attendanceStatus = "holiday";
     display = "holiday";
@@ -233,6 +239,7 @@ export function buildDayEntry(
     approvalStatus,
     display,
     isHalfDay: resolved?.effectiveStatus === "half_day",
+    compOff,
   };
 }
 
@@ -269,6 +276,10 @@ export interface AttendanceBuckets {
   rejectedDays: number;
   incompleteDays: number;
   absentDays: number;
+  /** Comp-off days taken: paid days off. */
+  compOffDays: number;
+  /** Comp-off earned this month by working on holidays (not paid again as work). */
+  compOffEarned: number;
   /** Minutes on records that were not rejected, including a session still open today. */
   workedMinutes: number;
   lateArrivals: number;
@@ -284,6 +295,8 @@ export function bucketEntries(entries: DayEntry[], ctx: AttendanceContext): Atte
     rejectedDays: 0,
     incompleteDays: 0,
     absentDays: 0,
+    compOffDays: 0,
+    compOffEarned: 0,
     workedMinutes: 0,
     lateArrivals: 0,
     expectedDays: 0,
@@ -291,6 +304,11 @@ export function bucketEntries(entries: DayEntry[], ctx: AttendanceContext): Atte
 
   for (const entry of entries) {
     const record = entry.record;
+    if (entry.compOff) {
+      buckets.compOffDays += 1;
+      buckets.expectedDays += 1;
+      continue;
+    }
     if (record) {
       if (record.approval !== "rejected") {
         // Only today's open session accrues live time; older open records have no reliable duration.
@@ -305,7 +323,10 @@ export function bucketEntries(entries: DayEntry[], ctx: AttendanceContext): Atte
       else if (record.effectiveStatus === "incomplete") buckets.incompleteDays += 1;
       else if (record.effectiveStatus === "in_progress") buckets.pendingDays += 1;
       else if (record.approval === "approved") {
-        if (record.effectiveStatus === "half_day") buckets.approvedHalfDays += 1;
+        if (entry.kind === "holiday") {
+          // Work on a holiday is banked as comp-off instead of being paid as an extra day.
+          buckets.compOffEarned += record.effectiveStatus === "half_day" ? 0.5 : 1;
+        } else if (record.effectiveStatus === "half_day") buckets.approvedHalfDays += 1;
         else buckets.approvedFullDays += 1;
       } else buckets.pendingDays += 1;
     } else if (entry.kind === "working" && entry.isEmployed && entry.date < ctx.today) {

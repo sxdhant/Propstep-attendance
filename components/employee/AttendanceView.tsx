@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { AttendanceCalendar } from "@/components/attendance/AttendanceCalendar";
 import { AttendanceDetailsSheet } from "@/components/attendance/AttendanceDetailsSheet";
 import { AttendanceTable } from "@/components/attendance/AttendanceTable";
+import { computeCompOffBalance } from "@/lib/comp-off";
 import { MonthSummaryPanel } from "@/components/attendance/MonthSummaryPanel";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { DataTablePagination } from "@/components/shared/DataTablePagination";
@@ -137,11 +138,15 @@ export function EmployeeAttendanceView() {
     setSheetOpen(true);
   };
 
+  const compOff = employee
+    ? computeCompOffBalance(Object.values(db.attendance).filter((a) => a.employeeId === employee.id), ctx.holidays)
+    : null;
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="My Attendance"
-        description="Your calendar and daily records. Every day with a check-in waits for an administrator's approval."
+        description={`Your calendar and daily records. Every day with a check-in waits for an administrator's approval.${compOff && (compOff.earned > 0 || compOff.taken > 0) ? ` Comp-off balance: ${compOff.balance} day${compOff.balance === 1 ? "" : "s"} (earned ${compOff.earned}, taken ${compOff.taken}).` : ""}`}
         actions={
           <MonthYearPicker
             value={activePeriod}

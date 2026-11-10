@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { attendanceId } from "@/lib/attendance-utils";
 import { BACKFILL_ALLOWED_MONTHS, BACKFILL_REMARK, planBackfillEntry, type BackfillEntry } from "@/lib/backfill";
+import { computeCompOffBalance } from "@/lib/comp-off";
 import { toDateKey } from "@/lib/date-utils";
 import { formatMonthYear } from "@/lib/format";
 import { audit } from "@/lib/server/audit";
@@ -17,7 +18,7 @@ const body = z.object({
       z.object({
         employeeId: z.string().min(1).max(40),
         date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-        status: z.enum(["present", "half_day", "absent", "week_off"]),
+        status: z.enum(["present", "half_day", "absent", "week_off", "comp_off"]),
         checkIn: clock.optional(),
         checkOut: clock.optional(),
       }),
@@ -101,6 +102,37 @@ export async function POST(request: Request) {
       return { entry, plan, index, key };
     });
 
+    // A comp-off day can only be taken against comp-off earned by working on holidays.
+    const compOffPlans = plans.filter((p) => p.plan.ok && p.plan.action === "save" && p.plan.status === "comp_off");
+    if (compOffPlans.length > 0) {
+      const employeeIds = [...new Set(compOffPlans.map((p) => p.entry.employeeId))];
+      const held = new Map<string, Map<string, { date: string; status: string; approval: string }>>();
+      for (const row of await query<{ id: string; employee_id: string; date: string; status: string; approval: string }>(
+        "SELECT id, employee_id, date::text AS date, status, approval FROM attendance WHERE employee_id = ANY($1) AND (status = 'comp_off' OR date = ANY($2::date[]))",
+        [employeeIds, Object.keys(holidays)],
+        tx,
+      )) {
+        if (!held.has(row.employee_id)) held.set(row.employee_id, new Map());
+        held.get(row.employee_id)!.set(row.id, row);
+      }
+      for (const employeeId of employeeIds) {
+        const records = held.get(employeeId) ?? new Map();
+        for (const { entry, plan, key } of plans) {
+          if (entry.employeeId !== employeeId || !plan.ok) continue;
+          if (plan.action === "clear") records.delete(key);
+          else records.set(key, { date: entry.date, status: plan.status, approval: plan.status === "week_off" || plan.status === "comp_off" ? "not_required" : "approved" });
+        }
+        const { earned, taken, balance } = computeCompOffBalance([...records.values()] as never, holidays);
+        if (balance >= 0) continue;
+        const name = employees.get(employeeId)?.fullName ?? employeeId;
+        const over = Math.ceil(-balance);
+        const latest = compOffPlans.filter((p) => p.entry.employeeId === employeeId).sort((a, b) => b.entry.date.localeCompare(a.entry.date));
+        for (const p of latest.slice(0, over)) {
+          p.plan = { ok: false, error: `${name} has earned ${earned} comp-off day${earned === 1 ? "" : "s"} but these entries use ${taken}. Comp-off is earned by working on a holiday.` };
+        }
+      }
+    }
+
     const results: RowResult[] = plans.map(({ entry, plan, index }) => ({
       index,
       employeeId: entry.employeeId,
@@ -133,7 +165,7 @@ export async function POST(request: Request) {
       }
       await query(
         `INSERT INTO attendance (id, employee_id, date, check_in, check_out, status, approval, remarks, reviewed_at, reviewed_by, review_note)
-         VALUES ($1,$2,$3,$4,$5,$6::text,CASE WHEN $6::text = 'week_off' THEN 'not_required' ELSE 'approved' END,$7,now(),$8,'Entered by an administrator (backfill).')
+         VALUES ($1,$2,$3,$4,$5,$6::text,CASE WHEN $6::text IN ('week_off','comp_off') THEN 'not_required' ELSE 'approved' END,$7,now(),$8,'Entered by an administrator (backfill).')
          ON CONFLICT (id) DO UPDATE SET check_in = EXCLUDED.check_in, check_out = EXCLUDED.check_out, status = EXCLUDED.status,
            approval = EXCLUDED.approval, reviewed_at = now(), reviewed_by = EXCLUDED.reviewed_by
          WHERE attendance.remarks = $7`,

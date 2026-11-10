@@ -14,6 +14,8 @@ export interface SalaryCalculation {
   divisor: number;
   approvedFullDays: number;
   approvedHalfDays: number;
+  /** Paid comp-off days taken (each counts as one payable day). Absent on older records. */
+  compOffDays?: number;
   /** Payable value of one half day (0.5 by default). */
   halfDayUnits: number;
   /** Approved full days + approved half days × halfDayUnits. */

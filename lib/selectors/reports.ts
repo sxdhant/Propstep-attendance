@@ -83,7 +83,7 @@ export interface ReportData {
   payrollByMonth: PayrollMonthTotals[];
 }
 
-const NON_WORKING_OR_FUTURE = new Set(["holiday", "weekly_off", "upcoming", "inactive", "not_checked_in"]);
+const NON_WORKING_OR_FUTURE = new Set(["holiday", "weekly_off", "comp_off", "upcoming", "inactive", "not_checked_in"]);
 const DAILY_GRANULARITY_MAX_DAYS = 45;
 
 function matchesAttendanceFilter(entry: DayEntry, filter: ReportAttendanceFilter): boolean {

@@ -110,6 +110,7 @@ const LEGEND: DayDisplayStatus[] = [
   "absent",
   "holiday",
   "weekly_off",
+  "comp_off",
 ];
 
 export function CalendarLegend({ className }: { className?: string }) {

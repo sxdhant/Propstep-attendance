@@ -74,6 +74,9 @@ export function SalaryBreakdownBody({ figures }: { figures: PayrollSnapshot }) {
           label={`Approved half days × ${formatUnits(figures.halfDayUnits)}`}
           value={`${figures.approvedHalfDays} → ${formatUnits(figures.approvedHalfDays * figures.halfDayUnits)}`}
         />
+        {(figures.compOffDays ?? 0) > 0 && (
+          <LedgerRow label="Comp-off days (paid, taken)" value={figures.compOffDays} note="A paid day off earned by working on a holiday" />
+        )}
         <LedgerRow label="Payable attendance units" value={formatUnits(figures.payableUnits)} />
       </div>
 

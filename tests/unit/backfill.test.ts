@@ -44,7 +44,7 @@ describe("backfill rules", () => {
     ["the future", entry({ date: "2026-10-14" }), { today: "2026-10-10" }, "future"],
     ["a day before joining", entry({ date: "2026-10-01" }), {}, "joined on 2026-10-05"],
     ["a weekly off (Tuesday)", entry({ date: "2026-10-13" }), {}, "weekly off"],
-    ["a holiday", entry({ date: "2026-10-20" }), {}, "holiday (Diwali)"],
+    ["a comp-off on a holiday", entry({ date: "2026-10-20", status: "comp_off" }), {}, "holiday (Diwali)"],
     ["a finalized month", entry(), { locked: true }, "finalized"],
     ["an unknown employee", entry(), { employee: undefined }, "Unknown employee"],
     ["a real check-in record", entry(), { existing: { remarks: null } }, "real check-in"],

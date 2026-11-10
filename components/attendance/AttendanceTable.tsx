@@ -15,7 +15,7 @@ interface AttendanceTableProps {
 export function RemarksCell({ entry }: { entry: DayEntry }) {
   const record = entry.record;
   if (!record) {
-    const text = entry.holidayName ?? (entry.kind === "weekly_off" ? "Weekly off" : "");
+    const text = entry.compOff ? "Comp-off (paid)" : (entry.holidayName ?? (entry.kind === "weekly_off" ? "Weekly off" : ""));
     return <span className="text-muted-foreground">{text || "—"}</span>;
   }
   return (

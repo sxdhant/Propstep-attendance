@@ -3,6 +3,7 @@
 import { CircleAlert, CircleCheck, Download, FileUp, Info, Save } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { computeCompOffBalance } from "@/lib/comp-off";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Spinner } from "@/components/shared/LoadingState";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -34,7 +35,7 @@ import type { Employee } from "@/types/employee";
 
 /* ------------------------------- shared bits ------------------------------- */
 
-const STATUS_LABEL: Record<BackfillStatus, string> = { present: "Present", half_day: "Half day", absent: "Absent", week_off: "Week off" };
+const STATUS_LABEL: Record<BackfillStatus, string> = { present: "Present", half_day: "Half day", absent: "Absent", week_off: "Week off", comp_off: "Comp-off" };
 const toClock = (iso: string) => {
   const p = getIstParts(new Date(iso));
   return `${p.hour}:${p.minute}`;
@@ -72,12 +73,12 @@ function MonthGrid({ employee, year, month, onSaved }: { employee: Employee; yea
         let blocked: string | null = null;
         if (personalOff && entry.isEmployed && !locked) blocked = null;
         else if (!entry.isEmployed) blocked = "Not employed";
-        else if (entry.kind === "holiday") blocked = entry.holidayName ?? "Holiday";
         else if (entry.kind === "weekly_off") blocked = "Weekly off";
         else if (entry.isFuture || entry.isToday) blocked = "Not yet";
         else if (real) blocked = "Recorded by check-in";
         else if (locked) blocked = "Payroll finalized";
-        return { date, blocked, record };
+        const holiday = entry.kind === "holiday" ? (entry.holidayName ?? "Holiday") : null;
+        return { date, blocked, record, holiday };
       }),
     [dates, db.attendance, employee, ctx, locked],
   );
@@ -88,7 +89,7 @@ function MonthGrid({ employee, year, month, onSaved }: { employee: Employee; yea
       if (blocked || !record || record.remarks !== BACKFILL_REMARK) map[date] = { status: "", checkIn: "", checkOut: "" };
       else
         map[date] = {
-          status: record.status === "half_day" ? "half_day" : record.status === "week_off" ? "week_off" : "present",
+          status: record.status === "half_day" ? "half_day" : record.status === "week_off" ? "week_off" : record.status === "comp_off" ? "comp_off" : "present",
           checkIn: record.checkIn ? toClock(record.checkIn) : "",
           checkOut: record.checkOut ? toClock(record.checkOut) : "",
         };
@@ -108,7 +109,12 @@ function MonthGrid({ employee, year, month, onSaved }: { employee: Employee; yea
   });
 
   const editable = days.filter((d) => !d.blocked);
-  const counts = { present: 0, half_day: 0, absent: 0, week_off: 0 };
+  const workingDays = editable.filter((d) => !d.holiday);
+  const compOff = useMemo(
+    () => computeCompOffBalance(Object.values(db.attendance).filter((a) => a.employeeId === employee.id), ctx.holidays),
+    [db.attendance, employee.id, ctx.holidays],
+  );
+  const counts = { present: 0, half_day: 0, absent: 0, week_off: 0, comp_off: 0 };
   for (const { date, blocked } of days) {
     const s = cells[date]?.status;
     if (!blocked && s) counts[s]++;
@@ -117,7 +123,7 @@ function MonthGrid({ employee, year, month, onSaved }: { employee: Employee; yea
   const markAllPresent = () =>
     setCells((c) => {
       const next = { ...c };
-      for (const { date } of editable) if (!next[date].status) next[date] = { ...next[date], status: "present" };
+      for (const { date } of workingDays) if (!next[date].status) next[date] = { ...next[date], status: "present" };
       return next;
     });
 
@@ -129,8 +135,8 @@ function MonthGrid({ employee, year, month, onSaved }: { employee: Employee; yea
         employeeId: employee.id,
         date,
         status,
-        ...(status !== "absent" && status !== "week_off" && c.checkIn ? { checkIn: c.checkIn } : {}),
-        ...(status !== "absent" && status !== "week_off" && c.checkOut ? { checkOut: c.checkOut } : {}),
+        ...(status !== "absent" && status !== "week_off" && status !== "comp_off" && c.checkIn ? { checkIn: c.checkIn } : {}),
+        ...(status !== "absent" && status !== "week_off" && status !== "comp_off" && c.checkOut ? { checkOut: c.checkOut } : {}),
       };
     });
     setSaving(true);
@@ -167,14 +173,17 @@ function MonthGrid({ employee, year, month, onSaved }: { employee: Employee; yea
       )}
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={markAllPresent} disabled={locked || editable.length === 0}>
+        <Button type="button" variant="outline" size="sm" onClick={markAllPresent} disabled={locked || workingDays.length === 0}>
           Mark all working days Present
         </Button>
         <Button type="button" variant="ghost" size="sm" onClick={() => { setCells(initial); setRowErrors({}); }} disabled={dirtyDates.length === 0}>
           Undo changes
         </Button>
         <p className="ml-auto text-sm text-muted-foreground" aria-live="polite">
-          {counts.present} present, {counts.half_day} half day, {counts.absent} absent{counts.week_off > 0 ? `, ${counts.week_off} week off` : ""}
+          <span className="mr-3 font-medium text-foreground" title="Earned by working on holidays, minus comp-off days already taken">
+            Comp-off balance: {compOff.balance} day{compOff.balance === 1 ? "" : "s"}
+          </span>
+          {counts.present} present, {counts.half_day} half day, {counts.absent} absent{counts.week_off > 0 ? `, ${counts.week_off} week off` : ""}{counts.comp_off > 0 ? `, ${counts.comp_off} comp-off` : ""}
         </p>
       </div>
 
@@ -189,7 +198,7 @@ function MonthGrid({ employee, year, month, onSaved }: { employee: Employee; yea
             </tr>
           </thead>
           <tbody className="divide-y">
-            {days.map(({ date, blocked }) => {
+            {days.map(({ date, blocked, holiday }) => {
               const c = cells[date];
               const worked = c.status === "present" || c.status === "half_day";
               const error = rowErrors[date];
@@ -198,6 +207,7 @@ function MonthGrid({ employee, year, month, onSaved }: { employee: Employee; yea
                   <td className="px-4 py-2 whitespace-nowrap">
                     <span className="font-medium text-foreground">{formatDate(date, "short")}</span>{" "}
                     <span className="text-muted-foreground">{formatWeekday(date)}</span>
+                    {holiday && <span className="mt-0.5 block text-xs text-violet-600">{holiday}: working today earns a comp-off</span>}
                   </td>
                   {blocked ? (
                     <td colSpan={3} className="px-4 py-2 text-xs">{blocked}</td>
@@ -212,7 +222,7 @@ function MonthGrid({ employee, year, month, onSaved }: { employee: Employee; yea
                           className="h-9 w-36 rounded-md border bg-background px-2 text-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                         >
                           {!initial[date].status && <option value="">Not set</option>}
-                          {(["present", "half_day", "absent", "week_off"] as const).map((s) => (
+                          {(holiday ? (["present", "half_day", "absent"] as const) : (["present", "half_day", "absent", "week_off", "comp_off"] as const)).map((s) => (
                             <option key={s} value={s}>{STATUS_LABEL[s]}</option>
                           ))}
                         </select>
@@ -236,7 +246,7 @@ function MonthGrid({ employee, year, month, onSaved }: { employee: Employee; yea
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-muted-foreground">
           Leave times empty to use office hours ({policy.officeStartTime} to {policy.officeEndTime}; a half day is {policy.halfDayThresholdHours} hours).
-          Days with no entry count as absent. Choose Week off for a day an employee takes off: it isn&apos;t an absence and isn&apos;t counted as a working day.
+          Days with no entry count as absent. Choose Week off for a day an employee takes off: it isn&apos;t an absence and isn&apos;t counted as a working day. If someone worked on a holiday, enter it as Present or Half day: it earns a comp-off, which you can then give as a paid day with Comp-off.
         </p>
         <Button type="button" onClick={save} disabled={dirtyDates.length === 0 || saving || locked}>
           {saving ? <Spinner /> : <Save className="size-4" aria-hidden />}

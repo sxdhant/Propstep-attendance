@@ -75,6 +75,7 @@ Then, for either: run `npm run db:migrate` and `npm run db:seed` (first admin), 
 | `GET /api/bootstrap` | signed in | One snapshot of everything the user may see |
 | `GET/POST /api/employees` | admin | List / create (returns a one-time temporary password) |
 | `GET/PATCH /api/employees/[id]` | admin (GET: self too) | Read / edit / deactivate |
+| `POST /api/employees/[id]/reset-password` | admin | New temporary password, signs the employee out |
 | `POST /api/employees/[id]/profile-reminder` | admin | Nudge an incomplete profile |
 | `PUT /api/profile`, `POST /api/profile` | employee | Save a draft / validate and submit |
 | `GET /api/attendance?month=` or `?date=` | signed in | Employees see their own; admins can add `&employeeId=` |

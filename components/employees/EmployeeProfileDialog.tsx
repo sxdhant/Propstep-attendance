@@ -1,6 +1,6 @@
 "use client";
 
-import { BellRing, Mail, Pencil, Phone } from "lucide-react";
+import { BellRing, KeyRound, Mail, Pencil, Phone } from "lucide-react";
 import { useMemo } from "react";
 import { toast } from "sonner";
 import { ProfileDetails } from "@/components/profile/ProfileDetails";
@@ -14,6 +14,7 @@ import { useAction } from "@/hooks/use-action";
 import { useAppData } from "@/hooks/use-app-data";
 import { monthOf } from "@/lib/date-utils";
 import { completedSectionCount, contentOf } from "@/lib/profile-utils";
+import { resetEmployeePassword } from "@/lib/services/employee-service";
 import { sendProfileReminder } from "@/lib/services/profile-service";
 import {
   formatCurrency,
@@ -59,6 +60,19 @@ export function EmployeeProfileDialog({ employee, open, onOpenChange, onEdit }: 
     const result = await sendReminder(employee.id);
     if (result.ok) toast.success("Reminder sent", { description: `${employee.fullName} will see it in their notifications.` });
     else toast.error("Couldn't send the reminder", { description: result.error });
+  };
+
+  const [resetPassword, resetting] = useAction(resetEmployeePassword);
+  const reset = async () => {
+    if (!employee) return;
+    const result = await resetPassword(employee.id);
+    if (!result.ok) return toast.error("Couldn't reset the password", { description: result.error });
+    toast.success(`Password reset for ${employee.fullName}`, {
+      description: `Temporary password: ${result.data.temporaryPassword}. Share it securely. It is shown only once, they were signed out everywhere, and must choose a new password at next sign-in.`,
+      duration: Infinity,
+      closeButton: true,
+      action: { label: "Copy", onClick: () => void navigator.clipboard?.writeText(result.data.temporaryPassword) },
+    });
   };
 
   return (
@@ -155,7 +169,7 @@ export function EmployeeProfileDialog({ employee, open, onOpenChange, onEdit }: 
               )}
             </section>
 
-            <DialogFooter className="gap-2">
+            <DialogFooter className="gap-2 sm:justify-between">
               <Button
                 type="button"
                 onClick={() => {
@@ -165,6 +179,10 @@ export function EmployeeProfileDialog({ employee, open, onOpenChange, onEdit }: 
               >
                 <Pencil className="size-4" aria-hidden />
                 Edit Employee
+              </Button>
+              <Button type="button" variant="outline" onClick={reset} disabled={resetting}>
+                {resetting ? <Spinner /> : <KeyRound className="size-4" aria-hidden />}
+                Reset password
               </Button>
             </DialogFooter>
           </>

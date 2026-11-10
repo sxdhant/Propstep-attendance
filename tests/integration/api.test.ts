@@ -301,11 +301,6 @@ describeIf("API (live server)", () => {
       expect((await set("June")).status).toBe(400);
     });
 
-    it("gives administrators no way to reset an employee's password", async () => {
-      const res = await fetch(`${BASE}/api/employees/${id}/reset-password`, { method: "POST", headers: { origin: BASE, cookie: admin.cookie } });
-      expect(res.status).toBe(404);
-    });
-
     it("deactivating an employee ends their sessions and blocks sign-in", async () => {
       const live = new Client();
       await live.login(email, "Another-Strong-Pass-9");
@@ -313,6 +308,20 @@ describeIf("API (live server)", () => {
       expect((await live.req("GET", "/api/auth/me")).status).toBe(401);
       expect((await new Client().login(email, "Another-Strong-Pass-9")).status).toBe(403);
       expect((await admin.req("PATCH", `/api/employees/${id}`, { status: "active" })).json.data.status).toBe("active");
+    });
+
+    it("lets an administrator reset an employee's password, and nobody else", async () => {
+      const live = new Client();
+      await live.login(email, "Another-Strong-Pass-9");
+      const reply = await admin.req("POST", `/api/employees/${id}/reset-password`);
+      expect(reply.json.ok).toBe(true);
+      const temporary = reply.json.data.temporaryPassword as string;
+      expect(temporary.length).toBeGreaterThanOrEqual(16);
+      expect((await live.req("GET", "/api/auth/me")).status).toBe(401); // signed out everywhere
+      expect((await new Client().login(email, "Another-Strong-Pass-9")).status).toBe(401);
+      const again = new Client();
+      expect((await again.login(email, temporary)).json.ok).toBe(true);
+      expect((await again.req("POST", `/api/employees/${id}/reset-password`)).status).toBe(403);
     });
 
     it("records the activity in the audit log", async () => {

@@ -6,7 +6,9 @@ export type RecordStatus =
   | "half_day"
   | "absent"
   | "incomplete"
-  | "in_progress";
+  | "in_progress"
+  /** An employee's own day off, chosen by the admin. Not an absence and not counted as a working day. */
+  | "week_off";
 
 /**
  * What a calendar day resolves to for display. Adds the calendar-driven states

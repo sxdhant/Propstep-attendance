@@ -179,11 +179,13 @@ export function buildDayEntry(
   record: AttendanceRecord | undefined,
   ctx: AttendanceContext,
 ): DayEntry {
-  const { kind, holidayName } = getDayKind(date, ctx);
+  // A personal week off behaves like a weekly off for this employee only.
+  const personalOff = record?.status === "week_off";
+  const { kind, holidayName } = personalOff ? { kind: "weekly_off" as const, holidayName: undefined } : getDayKind(date, ctx);
   const isToday = date === ctx.today;
   const isFuture = date > ctx.today;
   const isEmployed = isEmployedOn(employee, date);
-  const resolved = record ? resolveRecord(record, ctx) : null;
+  const resolved = record && !personalOff ? resolveRecord(record, ctx) : null;
 
   let attendanceStatus: AttendanceStatus;
   let approvalStatus: ApprovalStatus = "not_required";

@@ -171,6 +171,12 @@ export const ATTENDANCE_STATUS_META: Record<AttendanceStatus, StatusMeta> = {
     icon: CalendarOff,
     description: "Scheduled weekly off.",
   },
+  week_off: {
+    label: "Week Off",
+    tone: "gray",
+    icon: CalendarOff,
+    description: "A day off taken by this employee.",
+  },
   not_checked_in: {
     label: "Not Checked In",
     tone: "gray",

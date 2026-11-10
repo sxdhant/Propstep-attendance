@@ -18,7 +18,7 @@ export const BACKFILL_ALLOWED_MONTHS: readonly string[] = [
 /** Stored in `remarks` so backfilled days are recognisable, and so they are the only days a backfill may change. */
 export const BACKFILL_REMARK = "Entered by admin";
 
-export type BackfillStatus = "present" | "half_day" | "absent";
+export type BackfillStatus = "present" | "half_day" | "absent" | "week_off";
 
 export interface BackfillEntry {
   employeeId: string;
@@ -44,6 +44,7 @@ export interface PlanContext {
 
 export type Plan =
   | { ok: true; action: "save"; status: "present" | "half_day"; checkIn: IsoTimestamp; checkOut: IsoTimestamp }
+  | { ok: true; action: "save"; status: "week_off"; checkIn: null; checkOut: null }
   | { ok: true; action: "clear" }
   | { ok: false; error: string };
 
@@ -78,6 +79,7 @@ export function planBackfillEntry(entry: BackfillEntry, ctx: PlanContext): Plan 
   }
 
   if (entry.status === "absent") return { ok: true, action: "clear" };
+  if (entry.status === "week_off") return { ok: true, action: "save", status: "week_off", checkIn: null, checkOut: null };
 
   if ((entry.checkIn && !CLOCK.test(entry.checkIn)) || (entry.checkOut && !CLOCK.test(entry.checkOut))) {
     return { ok: false, error: "Times must look like 09:30." };
@@ -117,6 +119,13 @@ const STATUS_WORDS: Record<string, BackfillStatus> = {
   half_day: "half_day",
   a: "absent",
   absent: "absent",
+  w: "week_off",
+  wo: "week_off",
+  off: "week_off",
+  "week off": "week_off",
+  "week-off": "week_off",
+  week_off: "week_off",
+  "day off": "week_off",
 };
 
 /** Splits one CSV line, honouring double quotes. */

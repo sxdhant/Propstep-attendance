@@ -113,3 +113,17 @@ describe("backfill CSV", () => {
     expect(parsed.skipped).toBe(2);
   });
 });
+
+describe("week off", () => {
+  it("is saved without times, and is never counted as an absence or a working day", () => {
+    const result = planBackfillEntry({ employeeId: "EMP-1001", date: "2026-10-14", status: "week_off" }, {
+      policy: { ...DEFAULT_SETTINGS.attendance, weeklyOffs: [2] }, holidays: {}, employee, today: "2026-11-04", existing: null, locked: false, allowedMonths: ["2026-10"],
+    });
+    expect(result).toEqual({ ok: true, action: "save", status: "week_off", checkIn: null, checkOut: null });
+  });
+
+  it("reads week off words from a CSV", () => {
+    const parsed = parseBackfillCsv("employee_id,date,status\nEMP-1001,2026-10-14,week off\nEMP-1001,2026-10-15,WO\n");
+    expect(parsed.entries.map((e) => e.status)).toEqual(["week_off", "week_off"]);
+  });
+});

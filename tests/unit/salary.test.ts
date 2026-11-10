@@ -79,3 +79,19 @@ describe("default calendar", () => {
     expect(getDayKind("2026-11-11", ctx).kind).toBe("holiday");
   });
 });
+
+describe("personal week off", () => {
+  it("is a day off for that employee only: not an absence, not a scheduled working day", async () => {
+    const { buildDayEntry, summarizeMonth } = await import("@/lib/attendance-utils");
+    const employee = { id: "E1", joiningDate: "2026-10-01" } as Employee;
+    const ctx = { today: "2026-10-31", nowMs: Date.parse("2026-10-31T12:00:00Z"), policy: DEFAULT_SETTINGS.attendance, holidays: {} };
+    const off = { id: "E1_2026-10-07", employeeId: "E1", date: "2026-10-07", checkIn: null, checkOut: null, status: "week_off", approval: "not_required", remarks: "Entered by admin" } as never;
+    const entry = buildDayEntry(employee, "2026-10-07", off, ctx);
+    expect(entry.kind).toBe("weekly_off");
+    expect(entry.display).toBe("weekly_off");
+    const without = summarizeMonth(employee, {}, 2026, 10, ctx);
+    const withOff = summarizeMonth(employee, { "E1_2026-10-07": off } as never, 2026, 10, ctx);
+    expect(withOff.scheduledWorkingDays).toBe(without.scheduledWorkingDays - 1);
+    expect(withOff.absentDays).toBe(without.absentDays - 1);
+  });
+});

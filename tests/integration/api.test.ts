@@ -492,7 +492,7 @@ describeIf("API (live server)", () => {
         [
           { employeeId: id, date: days[0], status: "present" },
           { employeeId: id, date: tuesday, status: "present" },
-          { employeeId: id, date: "2026-09-15", status: "present" },
+          { employeeId: id, date: "2026-04-15", status: "present" },
           { employeeId: id, date: "2026-10-30", status: "present", checkIn: "15:00", checkOut: "09:00" },
           { employeeId: "EMP-9999", date: days[1], status: "present" },
         ],
@@ -502,7 +502,7 @@ describeIf("API (live server)", () => {
       const errors = (preview.json.data.results as Array<{ ok: boolean; error?: string }>).map((r) => r.error ?? "ok");
       expect(errors[0]).toBe("ok");
       expect(errors[1]).toContain("weekly off");
-      expect(errors[2]).toContain("Only 2026-10");
+      expect(errors[2]).toContain("Only 2026-05 to 2026-12");
       expect(errors[3]).toContain("after check-in");
       expect(errors[4]).toContain("Unknown employee");
       expect(await stored()).toHaveLength(0); // a preview never writes
@@ -542,6 +542,22 @@ describeIf("API (live server)", () => {
 
       const inbox = (await emp.req("GET", "/api/notifications")).json.data as Array<{ title: string }>;
       expect(inbox.filter((n) => n.title === "October 2026 attendance added")).toHaveLength(1);
+    });
+
+    it("records a flexible week off that is neither an absence nor an approval", async () => {
+      const holidaySet = new Set(((await admin.req("GET", "/api/holidays")).json.data as Array<{ date: string }>).map((h) => h.date));
+      const off = ["2026-10-28", "2026-10-29", "2026-10-26"].find((d) => !holidaySet.has(d) && !days.includes(d))!;
+      const saved = await post([{ employeeId: id, date: off, status: "week_off" }]);
+      expect(saved.json.ok).toBe(true);
+      const row = (await stored()).find((r: any) => r.date === off) as any;
+      expect(row).toMatchObject({ status: "week_off", approval: "not_required", check_in: null, check_out: null });
+
+      const mine = (await emp.req("GET", "/api/bootstrap")).json.data.db;
+      expect(Object.values<any>(mine.attendance).some((a) => a.date === off && a.status === "week_off")).toBe(true);
+
+      // Clearing it again restores the day.
+      expect((await post([{ employeeId: id, date: off, status: "absent" }])).json.ok).toBe(true);
+      expect((await stored()).some((r: any) => r.date === off)).toBe(false);
     });
 
     it("shows up for the employee, counts as approved days in payroll, and is audited", async () => {

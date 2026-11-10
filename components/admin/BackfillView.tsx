@@ -34,7 +34,7 @@ import type { Employee } from "@/types/employee";
 
 /* ------------------------------- shared bits ------------------------------- */
 
-const STATUS_LABEL: Record<BackfillStatus, string> = { present: "Present", half_day: "Half day", absent: "Absent" };
+const STATUS_LABEL: Record<BackfillStatus, string> = { present: "Present", half_day: "Half day", absent: "Absent", week_off: "Week off" };
 const toClock = (iso: string) => {
   const p = getIstParts(new Date(iso));
   return `${p.hour}:${p.minute}`;
@@ -68,8 +68,10 @@ function MonthGrid({ employee, year, month, onSaved }: { employee: Employee; yea
         const record = db.attendance[`${employee.id}_${date}`];
         const entry = buildDayEntry(employee, date, record, ctx);
         const real = Boolean(record) && record.remarks !== BACKFILL_REMARK;
+        const personalOff = record?.status === "week_off" && record.remarks === BACKFILL_REMARK;
         let blocked: string | null = null;
-        if (!entry.isEmployed) blocked = "Not employed";
+        if (personalOff && entry.isEmployed && !locked) blocked = null;
+        else if (!entry.isEmployed) blocked = "Not employed";
         else if (entry.kind === "holiday") blocked = entry.holidayName ?? "Holiday";
         else if (entry.kind === "weekly_off") blocked = "Weekly off";
         else if (entry.isFuture || entry.isToday) blocked = "Not yet";
@@ -86,7 +88,7 @@ function MonthGrid({ employee, year, month, onSaved }: { employee: Employee; yea
       if (blocked || !record || record.remarks !== BACKFILL_REMARK) map[date] = { status: "", checkIn: "", checkOut: "" };
       else
         map[date] = {
-          status: record.status === "half_day" ? "half_day" : "present",
+          status: record.status === "half_day" ? "half_day" : record.status === "week_off" ? "week_off" : "present",
           checkIn: record.checkIn ? toClock(record.checkIn) : "",
           checkOut: record.checkOut ? toClock(record.checkOut) : "",
         };
@@ -106,7 +108,7 @@ function MonthGrid({ employee, year, month, onSaved }: { employee: Employee; yea
   });
 
   const editable = days.filter((d) => !d.blocked);
-  const counts = { present: 0, half_day: 0, absent: 0 };
+  const counts = { present: 0, half_day: 0, absent: 0, week_off: 0 };
   for (const { date, blocked } of days) {
     const s = cells[date]?.status;
     if (!blocked && s) counts[s]++;
@@ -127,8 +129,8 @@ function MonthGrid({ employee, year, month, onSaved }: { employee: Employee; yea
         employeeId: employee.id,
         date,
         status,
-        ...(status !== "absent" && c.checkIn ? { checkIn: c.checkIn } : {}),
-        ...(status !== "absent" && c.checkOut ? { checkOut: c.checkOut } : {}),
+        ...(status !== "absent" && status !== "week_off" && c.checkIn ? { checkIn: c.checkIn } : {}),
+        ...(status !== "absent" && status !== "week_off" && c.checkOut ? { checkOut: c.checkOut } : {}),
       };
     });
     setSaving(true);
@@ -172,7 +174,7 @@ function MonthGrid({ employee, year, month, onSaved }: { employee: Employee; yea
           Undo changes
         </Button>
         <p className="ml-auto text-sm text-muted-foreground" aria-live="polite">
-          {counts.present} present, {counts.half_day} half day, {counts.absent} absent
+          {counts.present} present, {counts.half_day} half day, {counts.absent} absent{counts.week_off > 0 ? `, ${counts.week_off} week off` : ""}
         </p>
       </div>
 
@@ -210,7 +212,7 @@ function MonthGrid({ employee, year, month, onSaved }: { employee: Employee; yea
                           className="h-9 w-36 rounded-md border bg-background px-2 text-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                         >
                           {!initial[date].status && <option value="">Not set</option>}
-                          {(["present", "half_day", "absent"] as const).map((s) => (
+                          {(["present", "half_day", "absent", "week_off"] as const).map((s) => (
                             <option key={s} value={s}>{STATUS_LABEL[s]}</option>
                           ))}
                         </select>
@@ -234,7 +236,7 @@ function MonthGrid({ employee, year, month, onSaved }: { employee: Employee; yea
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-muted-foreground">
           Leave times empty to use office hours ({policy.officeStartTime} to {policy.officeEndTime}; a half day is {policy.halfDayThresholdHours} hours).
-          Days with no entry count as absent.
+          Days with no entry count as absent. Choose Week off for a day an employee takes off: it isn&apos;t an absence and isn&apos;t counted as a working day.
         </p>
         <Button type="button" onClick={save} disabled={dirtyDates.length === 0 || saving || locked}>
           {saving ? <Spinner /> : <Save className="size-4" aria-hidden />}
@@ -268,7 +270,7 @@ function CsvImport({ employees, year, month }: { employees: Employee[]; year: nu
       }
     }
     downloadCsv(`attendance-${year}-${String(month).padStart(2, "0")}-template.csv`, buildBackfillTemplate(rows));
-    toast.success("Template downloaded", { description: "Fill the status column with present, half_day or absent, then upload it here." });
+    toast.success("Template downloaded", { description: "Fill the status column with present, half_day, week_off or absent, then upload it here." });
   };
 
   const check = async (source: string) => {

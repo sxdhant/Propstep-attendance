@@ -17,7 +17,7 @@ const body = z.object({
       z.object({
         employeeId: z.string().min(1).max(40),
         date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-        status: z.enum(["present", "half_day", "absent"]),
+        status: z.enum(["present", "half_day", "absent", "week_off"]),
         checkIn: clock.optional(),
         checkOut: clock.optional(),
       }),
@@ -133,9 +133,9 @@ export async function POST(request: Request) {
       }
       await query(
         `INSERT INTO attendance (id, employee_id, date, check_in, check_out, status, approval, remarks, reviewed_at, reviewed_by, review_note)
-         VALUES ($1,$2,$3,$4,$5,$6,'approved',$7,now(),$8,'Entered by an administrator (backfill).')
+         VALUES ($1,$2,$3,$4,$5,$6::text,CASE WHEN $6::text = 'week_off' THEN 'not_required' ELSE 'approved' END,$7,now(),$8,'Entered by an administrator (backfill).')
          ON CONFLICT (id) DO UPDATE SET check_in = EXCLUDED.check_in, check_out = EXCLUDED.check_out, status = EXCLUDED.status,
-           approval = 'approved', reviewed_at = now(), reviewed_by = EXCLUDED.reviewed_by
+           approval = EXCLUDED.approval, reviewed_at = now(), reviewed_by = EXCLUDED.reviewed_by
          WHERE attendance.remarks = $7`,
         [key, entry.employeeId, entry.date, plan.checkIn, plan.checkOut, plan.status, BACKFILL_REMARK, auth.user.refId],
         tx,
